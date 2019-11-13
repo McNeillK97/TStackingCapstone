@@ -1,4 +1,0 @@
-sceneSetups:
-- path: Assets/HoloToolkit-Examples/SpatialUnderstanding/Scenes/SpatialUnderstandingExample.unity
-  isLoaded: 1
-  isActive: 1
