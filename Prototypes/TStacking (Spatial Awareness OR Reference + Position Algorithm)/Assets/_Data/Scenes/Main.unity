@@ -366,14 +366,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab0e6ddab6068e9409b22df565c25b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ContainerPlane: {fileID: 1147247344099830, guid: f58a720909c998e4985efa9d32bccaa7,
-    type: 2}
-  containerMarks: {fileID: 786137868}
-  InstructionTextMesh: {fileID: 154014403}
   wireFrame20: {fileID: 2100000, guid: 67c93096d6d86324c831c2f36ffef4e9, type: 2}
   wireFrame75: {fileID: 2100000, guid: d698790d3facd3d4289a13fa1243030a, type: 2}
-  requestFinishScan: 0
-  finishScan: 0
 --- !u!4 &230336808
 Transform:
   m_ObjectHideFlags: 0
@@ -398,13 +392,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b886d36914b81bf4ebec4ba2ba3453db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  containerMarks: {fileID: 786137868}
-  InstructionTextMesh: {fileID: 154014403}
-  enableScan: 0
-  enableRescan: 0
-  enableNext: 0
-  enableFinish: 0
-  enableScanBox: 0
 --- !u!114 &230336810
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -420,7 +407,7 @@ MonoBehaviour:
     type: 2}
   containerMarks: {fileID: 786137868}
   InstructionTextMesh: {fileID: 154014403}
-  openSpatialAwareness: 1
+  openSpatialAwareness: 0
 --- !u!114 &230336811
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -633,7 +620,6 @@ MonoBehaviour:
   length: 1.5
   width: 0.6
   height: 2
-  enableScanContainerMark: 0
 --- !u!114 &786137874
 MonoBehaviour:
   m_ObjectHideFlags: 0

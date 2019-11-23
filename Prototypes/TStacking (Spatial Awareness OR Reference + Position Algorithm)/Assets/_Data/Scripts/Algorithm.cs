@@ -10,7 +10,20 @@ public class Algorithm : MonoBehaviour
     private Transform containerPlane;
     private Vector3 containerXYZ;
     private bool findContainerPlane = false;
-    private List<Vector3> waitingQueue = new List<Vector3>();
+    private List<Vector3> waitingQueue = new List<Vector3>();   //Volume Waiting Queue
+
+    //******************** Hard Code Testing *********************
+    private List<Vector3> waitingQueuePosition = new List<Vector3>();
+    private int waitingQueuePositionIndex = 0;
+
+    private void Start()
+    {
+        waitingQueuePosition.Add(new Vector3(0.0f, 0.0f, 0.0f));
+        waitingQueuePosition.Add(new Vector3(0.4f, 0.0f, 0.0f));
+        waitingQueuePosition.Add(new Vector3(0.8f, 0.0f, 0.0f));
+        waitingQueuePosition.Add(new Vector3(0.2f, 0.3f, 0.0f));
+        waitingQueuePosition.Add(new Vector3(0.6f, 0.3f, 0.0f));
+    }
 
     public void SetContainerInfo(Vector3 containerXYZ)
     {
@@ -29,23 +42,27 @@ public class Algorithm : MonoBehaviour
         if(waitingQueue.Count > 5)
             CalculatePosition();
         */
-        CalculatePosition();
+        CalculateBoxPosition();
     }
 
-    public void CalculatePosition()
+    private void CalculateBoxPosition()
     {
-        Vector3 boxPosition = Vector3.zero;
+        Vector3 boxPosition = waitingQueuePosition[waitingQueuePositionIndex];
+
         int waitingQueueIndex = 0;
         //This is for the algorithm to calculate the position
 
 
-        GenerateBox(boxPosition, waitingQueueIndex);
+        InstantiateBox(boxPosition, waitingQueueIndex);
+
+        if (waitingQueuePositionIndex < 4)
+            waitingQueuePositionIndex++;
     }
 
-    private void GenerateBox(Vector3 position, int waitingQueueIndex)
+    private void InstantiateBox(Vector3 boxPosition, int waitingQueueIndex)
     {
         GameObject boxCreated = box;
-        boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
+        boxCreated.transform.localPosition = new Vector3(boxPosition.x, boxPosition.y, -boxPosition.z);
         boxCreated.transform.localScale = waitingQueue[waitingQueueIndex];
         GameObject.Instantiate(boxCreated, containerPlane);
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
-public class GameController : MonoBehaviour {
-
+public class GameController : MonoBehaviour
+{
     public GameObject containerPlane;
     public GameObject containerMarks;
     public TextMesh InstructionTextMesh;
@@ -9,26 +9,28 @@ public class GameController : MonoBehaviour {
 
     private VoiceCommand voiceCommand;
     private Algorithm algorithm;
+    private SpatialAwareness spatialAwareness;
 
     private void Start()
     {
         voiceCommand = this.GetComponent<VoiceCommand>();
         algorithm = this.GetComponent<Algorithm>();
+        spatialAwareness = this.GetComponent<SpatialAwareness>();
 
         if (openSpatialAwareness)
         {
             this.GetComponent<SpatialAwareness>().enabled = true;
-            voiceCommand.enableScan = true;
+            voiceCommand.SetScanCommand(true);
             InstructionTextMesh.text = "Please Say \"Scan\" to Start the Spatial Awareness";
         }
         else
         {
             InstructionTextMesh.text = "Please scan the container mark";
-            this.containerMarks.GetComponent<TrackableEventHandler>().enableScanContainerMark = true;
+            this.SetScanContainerMark(true);
         }
     }
 
-    public void generateContainerPlane(float length, float width, float height, Transform transform)
+    public void GenerateContainerPlane(float length, float width, float height)
     {
         // Generate the container plane
         GameObject containerPlaneCreated = containerPlane;
@@ -45,12 +47,27 @@ public class GameController : MonoBehaviour {
                                                      "Say \"Rescan\" if you want to rescan the plane mark";
 
         // Enable Voice command to say "Rescan" and "Next"
-        voiceCommand.enableRescan = true;
-        voiceCommand.enableNext = true;
+        voiceCommand.SetRescanCommand(true);
+        voiceCommand.SetNextCommand(true);
     }
 
-    public void generateBox(float length, float width, float height)
+    public void GenerateBox(float length, float width, float height)
     {
         algorithm.SetBoxInfo(new Vector3(length, height, width));
+    }
+
+    public void StartSpatialAwareness()
+    {
+        spatialAwareness.ScanStateStart();
+    }
+
+    public void SetInstructionText(string info)
+    {
+        InstructionTextMesh.text = info;
+    }
+
+    public void SetScanContainerMark(bool status)
+    {
+        containerMarks.GetComponent<TrackableEventHandler>().SetEnableScanContainerMark(status);
     }
 }

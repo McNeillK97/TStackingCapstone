@@ -347,10 +347,10 @@
  <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.33f1/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
  </Reference>
  <Reference Include="GLTFSerialization">
- <HintPath>C:/Users/FVJack/Desktop/TStacking Resources/Final Decision/TStacking (Spatial Awareness OR Reference + Position Algorithm)/Assets/HoloToolkit/Utilities/Scripts/GLTF/Plugins/GLTFSerialization/GLTFSerialization.dll</HintPath>
+ <HintPath>D:/Fall 2019/CSE485/TStackingCapstone/Prototypes/TStacking (Spatial Awareness OR Reference + Position Algorithm)/Assets/HoloToolkit/Utilities/Scripts/GLTF/Plugins/GLTFSerialization/GLTFSerialization.dll</HintPath>
  </Reference>
  <Reference Include="Newtonsoft.Json">
- <HintPath>C:/Users/FVJack/Desktop/TStacking Resources/Final Decision/TStacking (Spatial Awareness OR Reference + Position Algorithm)/Assets/HoloToolkit/Utilities/Scripts/GLTF/Plugins/JsonNet/Newtonsoft.Json.dll</HintPath>
+ <HintPath>D:/Fall 2019/CSE485/TStackingCapstone/Prototypes/TStacking (Spatial Awareness OR Reference + Position Algorithm)/Assets/HoloToolkit/Utilities/Scripts/GLTF/Plugins/JsonNet/Newtonsoft.Json.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>C:/Users/FVJack/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.8/Editor/UnityEditor.Advertisements.dll</HintPath>

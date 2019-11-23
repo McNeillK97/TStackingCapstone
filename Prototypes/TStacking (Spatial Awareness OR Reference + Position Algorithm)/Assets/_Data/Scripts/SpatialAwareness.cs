@@ -5,18 +5,19 @@ using UnityEngine;
 
 public class SpatialAwareness : MonoBehaviour, IInputClickHandler
 {
-    public GameObject ContainerPlane;
-    public GameObject containerMarks;
-    public TextMesh InstructionTextMesh;
     public Material wireFrame20;
     public Material wireFrame75;
-    public bool requestFinishScan;
-    public bool finishScan;
+    
+    private GameController gameController;
+    private bool requestFinishScan;
+    private bool finishScan;
 
     private void Start()
     {
+        //initialize components
         requestFinishScan = false;
         finishScan = false;
+        gameController = this.GetComponent<GameController>();
     }
 
     public void ScanStateStart()
@@ -55,17 +56,24 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
                 case SpatialUnderstanding.ScanStates.ReadyToScan:
                     break;
                 case SpatialUnderstanding.ScanStates.Scanning:
-                    this.InstructionTextMesh.text = "State: Scanning";
+                    string info = "State: Scanning";
+                    gameController.SetInstructionText(info);
+
                     this.LogSurfaceState();
                     break;
                 case SpatialUnderstanding.ScanStates.Finishing:
-                    this.InstructionTextMesh.text = "State: Finishing Scan";
+                    string info2 = "State: Finishing Scan";
+                    gameController.SetInstructionText(info2);
+
                     break;
                 case SpatialUnderstanding.ScanStates.Done:
-                    this.InstructionTextMesh.text = "State: Scan Finished\n" +
-                                                                       "Please scan the container plane mark\n";
+                    string info3 = "State: Scan Finished\n" +
+                                           "Please scan the container plane mark\n";
+                    gameController.SetInstructionText(info3);
+
                     GameObject.FindGameObjectWithTag("SpatialUnderstanding").GetComponent<SpatialUnderstandingCustomMesh>().MeshMaterial = wireFrame20;
-                    this.containerMarks.GetComponent<TrackableEventHandler>().enableScanContainerMark = true;
+
+                    gameController.SetScanContainerMark(true);
                     this.finishScan = true;
                     break;
                 default:
@@ -80,7 +88,9 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
         if (SpatialUnderstandingDll.Imports.QueryPlayspaceStats(statsPtr) != 0)
         {
             var stats = SpatialUnderstanding.Instance.UnderstandingDLL.GetStaticPlayspaceStats();
-            this.InstructionTextMesh.text = string.Format("Please Air-Tap when you are finished");
+
+            string info = string.Format("Please Air-Tap when you are finished");
+            gameController.SetInstructionText(info);
         }
     }
 
@@ -88,7 +98,9 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
     {
         if(!requestFinishScan)
         {
-            this.InstructionTextMesh.text = "Requested Finish Scan";
+            string info = "Requested Finish Scan";
+            gameController.SetInstructionText(info);
+
             SpatialUnderstanding.Instance.RequestFinishScan();
             requestFinishScan = true;
         }

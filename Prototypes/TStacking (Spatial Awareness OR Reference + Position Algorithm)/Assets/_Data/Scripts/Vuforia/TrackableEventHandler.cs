@@ -14,18 +14,10 @@ using Vuforia;
 /// </summary>
 public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
 {
-    #region PUBLIC_VARIABLES
-
     public float length, width, height;
-    public bool enableScanContainerMark = false;
-
-    #endregion
-
-    #region PRIVATE_VARIABLES
+    private bool enableScanContainerMark = false;
 
     private GameController gameController;
-
-    #endregion
 
     #region PROTECTED_MEMBER_VARIABLES
 
@@ -113,7 +105,7 @@ public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
            if (GameObject.FindGameObjectWithTag("ContainerPlane"))
                 Destroy(GameObject.FindGameObjectWithTag("ContainerPlane"));
 
-            gameController.generateContainerPlane(length, width, height, this.transform);
+            gameController.GenerateContainerPlane(length, width, height);
 
             enableScanContainerMark = false;
         }
@@ -139,4 +131,9 @@ public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
     }
 
     #endregion // PROTECTED_METHODS
+
+    public void SetEnableScanContainerMark(bool status)
+    {
+        enableScanContainerMark = status;
+    }
 }
