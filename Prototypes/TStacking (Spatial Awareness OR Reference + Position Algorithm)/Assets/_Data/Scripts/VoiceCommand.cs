@@ -86,7 +86,7 @@ public class VoiceCommand : MonoBehaviour
         if(enableNext)
         {
             //Update the instruction text
-            string info = "Please say \"Set\" to set the box's information";
+            string info = "Please say \"Set Box\" to set the box's information";
             gameController.SetInstructionText(info);
 
             enableScanBox = true;
