@@ -4,21 +4,19 @@ using UnityEngine;
 
 public class Algorithm : MonoBehaviour
 {
+    //Public Components
+    public GameObject box;      //Prefabs of container with anchor
 
-    //Prefabs of container with anchor
-    public GameObject box;
-
+    //Private Components
     private Transform container;
     private Vector3 containerXYZ;
-    private List<Vector3> waitingQueue = new List<Vector3>();
-    private float xOff = 0;
-    private float yOff = 0;
-    private float zOff = 0;
-    private float xZero = 0;
-    private float zZero = 0;
-    private float xTemp = 0;
-    private float zTemp = 0;
     private Vector3 boxDimension;
+    private List<Vector3> waitingQueue = new List<Vector3>();
+
+    private float xOff = 0, yOff = 0, zOff = 0;
+    private float xZero = 0, zZero = 0;
+    private float xTemp = 0, zTemp = 0;
+
     private bool check1 = false;
     private bool check2 = false;
 
@@ -54,7 +52,6 @@ public class Algorithm : MonoBehaviour
         xOff = xZero;
         zOff = zZero;
         */
-
     }
 
     public void CalculatePosition()
@@ -99,7 +96,8 @@ public class Algorithm : MonoBehaviour
                         check1 = true;
                         zOff = zZero;
                         xOff = xTemp;
-                        GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
+                        //GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
+                        Debug.Log("check 1; xOff: " + xOff);
                     }
                     else
                     {
@@ -119,8 +117,8 @@ public class Algorithm : MonoBehaviour
                 if (xOff > xTemp)
                 {
                     xTemp = xOff;
-                    GameObject testing4 = new GameObject("max = " +xTemp);
-
+                    //GameObject testing4 = new GameObject("max = " +xTemp);
+                    Debug.Log("max = " + xTemp);
                 }
                 if (!check1)
                 {
@@ -139,8 +137,6 @@ public class Algorithm : MonoBehaviour
                 }
                 CalculatePosition();
             }
-
-
             //GenerateBox(boxPosition);
         }
     }

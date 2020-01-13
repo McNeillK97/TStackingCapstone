@@ -13,7 +13,6 @@ public class InputController : MonoBehaviour
     //Prefabs of container with anchor
     public GameObject container;
 
-
     //I added another button for generating the boxes so you are going to need to add this to the unity scene to make it work
     //Box button to be interactable
     public Button btnGC; //Generate container button
@@ -47,7 +46,7 @@ public class InputController : MonoBehaviour
         }
     }
 
-    public void GsenerateBox()
+    public void SetBox()
     {
         algorithm.SetBox(new Vector3(float.Parse(x.text), float.Parse(y.text), float.Parse(z.text)));
         btnSB.interactable = false;
@@ -56,6 +55,7 @@ public class InputController : MonoBehaviour
 
     public void GenerateBox()
     {
+        Debug.Log("1");
         algorithm.CalculatePosition();
     }
 }

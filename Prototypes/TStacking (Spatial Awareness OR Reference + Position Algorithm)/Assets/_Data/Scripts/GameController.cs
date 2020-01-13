@@ -51,9 +51,17 @@ public class GameController : MonoBehaviour
         voiceCommand.SetNextCommand(true);
     }
 
-    public void GenerateBox(float length, float width, float height)
+    public void SetBoxInfo(float length, float width, float height)
     {
         algorithm.SetBoxInfo(new Vector3(length, height, width));
+        voiceCommand.SetScanBoxCommand(false);
+        voiceCommand.SetGenerateCommand(true);
+    }
+
+    public void GenerateBox()
+    {
+        Debug.Log("GenerateBox");
+        algorithm.CalculatePosition();
     }
 
     public void StartSpatialAwareness()

@@ -6,12 +6,13 @@ using UnityEngine.Windows.Speech;
 
 public class VoiceCommand : MonoBehaviour
 {
+    public float boxLength, boxWidth, boxHeight;
+
     private KeywordRecognizer keywordRecognizer;
     private Dictionary<string, Action> actions;
     private GameController gameController;
-    private bool enableScan, enableRescan, enableNext, enableFinish;
+    private bool enableScan, enableRescan, enableNext, enableGenerate, enableFinish;
     private bool enableScanBox;     //This one is for testing
-
     private void Start()
     {
         //Initialize components
@@ -20,20 +21,20 @@ public class VoiceCommand : MonoBehaviour
         enableScan = false;
         enableRescan = false;
         enableNext = false;
+        enableGenerate = false;
         enableFinish = false;
 
         //Add the keyword and related functions
         actions.Add("scan", Scan);
         actions.Add("next", Next);
         actions.Add("rescan", Rescan);
+        actions.Add("generate", Generate);
         actions.Add("finish", Finish);
         actions.Add("restart", Restart);
 
         #region REGION_ONLY_FOR_TESTING 
         enableScanBox = false;
-        actions.Add("large", Large);
-        actions.Add("medium", Medium);
-        actions.Add("small", Small);
+        actions.Add("set box", Set);
         #endregion
 
         keywordRecognizer = new KeywordRecognizer(actions.Keys.ToArray());
@@ -85,16 +86,27 @@ public class VoiceCommand : MonoBehaviour
         if(enableNext)
         {
             //Update the instruction text
-            string info = "You can scan the box mark right now";
+            string info = "Please say \"Set\" to set the box's information";
             gameController.SetInstructionText(info);
 
-            //Enable the voicec command "Small", "Medium", and "Large" and "Finish" ----  !!! the voice command "Small", "Medium", and "Large" only for testing !!!
             enableScanBox = true;
             enableFinish = true;
 
             //Disable the voice command "Rescan" and "Next" 
             enableRescan = false;
             enableNext = false;
+        }
+    }
+
+    private void Generate()
+    {
+        if(enableGenerate)
+        {
+            string info = "Insert a box\n" +
+                                 "Say \"Finish\" when you want to finish";
+            gameController.SetInstructionText(info);
+
+            gameController.GenerateBox();
         }
     }
 
@@ -107,8 +119,8 @@ public class VoiceCommand : MonoBehaviour
                                  "Say \"Restart\" to replay";
             gameController.SetInstructionText(info);
 
-            //Disable the voice command  "Small", "Medium", and "Large" and "Finish" ---- !!!  the voice command "Small", "Medium", and "Large" only for testing !!!
-            enableScanBox = false;  
+            //Disable the voice command  "Generate"
+            enableGenerate= false;  
             enableFinish = false;
         }
     }
@@ -120,39 +132,16 @@ public class VoiceCommand : MonoBehaviour
     #endregion
 
     #region REGION_ONLY_FOR_TESTING 
-    private void Large()
+    private void Set()
     {
         if(enableScanBox)
         {
-            string info = "Insert a large box\n" +
-                                 "Say \"Finish\" when you want to finish";
+            string info = "Insert same boxes\n" +
+                                 "Length: " + boxLength + "m, Width: " + boxWidth + "m, Height: " + boxHeight  + "m\n" +
+                                 "Say \"Generate\" when you want to insert";
             gameController.SetInstructionText(info);
 
-            this.gameController.GenerateBox(0.45f, 0.45f, 0.6f);
-        }
-    }
-
-    private void Medium()
-    {
-        if(enableScanBox)
-        {
-            string info = "Insert a medium box\n" +
-                                 "Say \"Finish\" when you want to finish";
-            gameController.SetInstructionText(info);
-
-            this.gameController.GenerateBox(0.4f, 0.3f, 0.3f);
-        }
-    }
-
-    private void Small()
-    {
-        if(enableScanBox)
-        {
-            string info = "Insert a small box\n" +
-                                 "Say \"Finish\" when you want to finish";
-            gameController.SetInstructionText(info);
-
-            this.gameController.GenerateBox(0.2f, 0.2f, 0.2f);
+            gameController.SetBoxInfo(boxLength, boxWidth, boxHeight);
         }
     }
     #endregion
@@ -171,6 +160,11 @@ public class VoiceCommand : MonoBehaviour
     public void SetNextCommand(bool status)
     {
         enableNext = status;
+    }
+
+    public void SetGenerateCommand(bool status)
+    {
+        enableGenerate = status;
     }
 
     public void SetFinishCommand(bool status)
