@@ -57,11 +57,12 @@ public class Algorithm : MonoBehaviour
     public void CalculatePosition()
     {
         Vector3 boxPosition = Vector3.zero;
-        int waitingQueueIndex = 0;
+        //int waitingQueueIndex = 0;
         //This is for the algorithm to calculate the position
         //check y
         if (yOff + boxDimension.y <= containerXYZ.y)
         {
+			GameObject testing13 = new GameObject(containerXYZ.x + "," + containerXYZ.z);
             //check x
             if (xOff + boxDimension.x <= containerXYZ.x)
             {
@@ -75,9 +76,18 @@ public class Algorithm : MonoBehaviour
                     if (check1)
                     {
                         zOff += boxDimension.z;
+						if (zOff > zMax) {
+							zMax = zOff;
+						}
+						if (xOff + boxDimension.x > xMax) {
+							xMax = xOff + boxDimension.x;
+						}
                     }
                     else {
                         xOff += boxDimension.x;
+						if (xOff > xMax) {
+							xMax = xOff;
+						}
                     }
                 }
                 else
@@ -96,11 +106,18 @@ public class Algorithm : MonoBehaviour
                         check1 = true;
                         zOff = zZero;
                         xOff = xTemp;
-                        //GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
-                        Debug.Log("check 1; xOff: " + xOff);
+                        GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
                     }
                     else
                     {
+						//new
+						containerXYZ.x = xMax;
+						containerXYZ.z = zMax;
+						//GameObject testing11 = new GameObject(xMax + "," + zMax);
+						xMax = 0;
+						zMax = 0;
+
+
                         xOff = xZero;
                         zOff = zZero;
                         yOff += boxDimension.y;
@@ -117,16 +134,25 @@ public class Algorithm : MonoBehaviour
                 if (xOff > xTemp)
                 {
                     xTemp = xOff;
-                    //GameObject testing4 = new GameObject("max = " +xTemp);
-                    Debug.Log("max = " + xTemp);
+                    GameObject testing4 = new GameObject("max = " +xTemp);
+
                 }
                 if (!check1)
                 {
                     xOff = xZero;
                     zOff += boxDimension.z;
+					if (zOff > zMax) {
+						zMax = zOff;
+					}
                 }
                 else
                 {
+					containerXYZ.x = xMax;
+					containerXYZ.z = zMax;
+					//GameObject testing12 = new GameObject(xMax + "," + zMax);
+					xMax = 0;
+					zMax = 0;
+
                     xOff = xZero;
                     zOff = zZero;
                     yOff += boxDimension.y;
@@ -137,6 +163,8 @@ public class Algorithm : MonoBehaviour
                 }
                 CalculatePosition();
             }
+
+
             //GenerateBox(boxPosition);
         }
     }
