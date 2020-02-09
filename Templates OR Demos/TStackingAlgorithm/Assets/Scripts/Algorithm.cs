@@ -62,7 +62,7 @@ public class Algorithm : MonoBehaviour
         //check y
         if (yOff + boxDimension.y <= containerXYZ.y)
         {
-			GameObject testing13 = new GameObject(containerXYZ.x + "," + containerXYZ.z);
+	    GameObject testing13 = new GameObject(containerXYZ.x + "," + containerXYZ.z);
             //check x
             if (xOff + boxDimension.x <= containerXYZ.x)
             {
@@ -76,18 +76,18 @@ public class Algorithm : MonoBehaviour
                     if (check1)
                     {
                         zOff += boxDimension.z;
-						if (zOff > zMax) {
-							zMax = zOff;
-						}
-						if (xOff + boxDimension.x > xMax) {
-							xMax = xOff + boxDimension.x;
-						}
+			if (zOff > zMax) {
+				zMax = zOff;
+			}
+			if (xOff + boxDimension.x > xMax) {
+				xMax = xOff + boxDimension.x;
+			}
                     }
                     else {
                         xOff += boxDimension.x;
-						if (xOff > xMax) {
-							xMax = xOff;
-						}
+			if (xOff > xMax) {
+				xMax = xOff;
+			}
                     }
                 }
                 else
@@ -110,12 +110,11 @@ public class Algorithm : MonoBehaviour
                     }
                     else
                     {
-						//new
-						containerXYZ.x = xMax;
-						containerXYZ.z = zMax;
-						//GameObject testing11 = new GameObject(xMax + "," + zMax);
-						xMax = 0;
-						zMax = 0;
+			containerXYZ.x = xMax;
+			containerXYZ.z = zMax;
+			//GameObject testing11 = new GameObject(xMax + "," + zMax);
+			xMax = 0;
+			zMax = 0;
 
 
                         xOff = xZero;
@@ -141,17 +140,17 @@ public class Algorithm : MonoBehaviour
                 {
                     xOff = xZero;
                     zOff += boxDimension.z;
-					if (zOff > zMax) {
-						zMax = zOff;
-					}
+		    if (zOff > zMax) {
+			    zMax = zOff;
+		    }
                 }
                 else
                 {
-					containerXYZ.x = xMax;
-					containerXYZ.z = zMax;
-					//GameObject testing12 = new GameObject(xMax + "," + zMax);
-					xMax = 0;
-					zMax = 0;
+		    containerXYZ.x = xMax;
+		    containerXYZ.z = zMax;
+		    //GameObject testing12 = new GameObject(xMax + "," + zMax);
+		    xMax = 0;
+		    zMax = 0;
 
                     xOff = xZero;
                     zOff = zZero;
