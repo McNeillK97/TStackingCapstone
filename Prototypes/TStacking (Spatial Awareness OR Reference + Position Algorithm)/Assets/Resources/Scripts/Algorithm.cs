@@ -18,9 +18,12 @@ public class Algorithm : MonoBehaviour
     private float xOff = 0, yOff = 0, zOff = 0;
     private float xZero = 0, zZero = 0;
     private float xTemp = 0, zTemp = 0;
+    private float xMax = 0; zMax = 0;
 
     private bool check1 = false;
     private bool check2 = false;
+    private bool check3 = false;
+    private bool check4 = false;
     private bool findContainerPlane = false;
     private bool isFirstBox = true;
 
@@ -63,93 +66,136 @@ public class Algorithm : MonoBehaviour
         */
     }
 
-    public void CalculatePosition()
-    {
-        Vector3 boxPosition = Vector3.zero;
-        int waitingQueueIndex = 0;
-        //This is for the algorithm to calculate the position
-        //check y
-        if (yOff + boxDimension.y <= containerXYZ.y)
-        {
-            //check x
-            if (xOff + boxDimension.x <= containerXYZ.x)
-            {
-                //check z
-                if (zOff + boxDimension.z <= containerXYZ.z)
-                {
-                    boxPosition.x = xOff;
-                    boxPosition.y = yOff;
-                    boxPosition.z = zOff;
-                    GenerateBox(boxPosition);
-                    if (check1)
-                    {
-                        zOff += boxDimension.z;
-                    }
-                    else
-                    {
-                        xOff += boxDimension.x;
-                    }
-                }
-                else
-                {
-                    //containerXYZ.x = xOff;
-                    //containerXYZ.z = zOff;
-                    if (!check2)
-                    {
-                        float temp = boxDimension.x;
-                        boxDimension.x = boxDimension.z;
-                        boxDimension.z = temp;
-                        check2 = true;
-                    }
-                    else if (!check1)
-                    {
-                        check1 = true;
-                        zOff = zZero;
-                        xOff = xTemp;
-                        //GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
-                        Debug.Log("check 1; xOff: " + xOff);
-                    }
-                    else
-                    {
-                        xOff = xZero;
-                        zOff = zZero;
-                        yOff += boxDimension.y;
-                        xTemp = 0;
+public void CalculatePosition()
+	{
+		Vector3 boxPosition = Vector3.zero;
+		int waitingQueueIndex = 0;
+		//This is for the algorithm to calculate the position
+		//check y
+		if (yOff + boxDimension.y <= containerXYZ.y)
+		{
+			GameObject testing13 = new GameObject(containerXYZ.x + "," + containerXYZ.z);
+			//check x
+			if (xOff + boxDimension.x <= containerXYZ.x)
+			{
+				//check z
+				if (zOff + boxDimension.z <= containerXYZ.z)
+				{
+					check3 = true;
+					boxPosition.x = xOff;
+					boxPosition.y = yOff;
+					boxPosition.z = zOff;
+					GenerateBox(boxPosition);
+					if (check1)
+					{
+						zOff += boxDimension.z;
+						if (zOff > zMax) {
+							zMax = zOff;
+						}
+						if (xOff + boxDimension.x > xMax) {
+							xMax = xOff + boxDimension.x;
+						}
+					}
+					else {
+						xOff += boxDimension.x;
+						if (xOff > xMax) {
+							xMax = xOff;
+						}
+					}
+				}
+				else
+				{
+					//containerXYZ.x = xOff;
+					//containerXYZ.z = zOff;
+					if (!check2)
+					{
+						float temp = boxDimension.x;
+						boxDimension.x = boxDimension.z;
+						boxDimension.z = temp;
+						check2 = true;
+					}
+					else if (!check1)
+					{
+						check1 = true;
+						zOff = zZero;
+						xOff = xTemp;
+						//GameObject testing3 = new GameObject("check 1; xOff: " + xOff);
+					}
+					else
+					{
+						containerXYZ.x = xMax;
+						containerXYZ.z = zMax;
+						//GameObject testing11 = new GameObject(xMax + "," + zMax);
+						xMax = 0;
+						zMax = 0;
 
-                        check2 = false;
-                        check1 = false;
-                    }
-                    CalculatePosition();
-                }
-            }
-            else
-            {
-                if (xOff > xTemp)
-                {
-                    xTemp = xOff;
-                    //GameObject testing4 = new GameObject("max = " +xTemp);
-                    Debug.Log("max = " + xTemp);
-                }
-                if (!check1)
-                {
-                    xOff = xZero;
-                    zOff += boxDimension.z;
-                }
-                else
-                {
-                    xOff = xZero;
-                    zOff = zZero;
-                    yOff += boxDimension.y;
-                    xTemp = 0;
 
-                    check2 = false;
-                    check1 = false;
-                }
-                CalculatePosition();
-            }
-            //GenerateBox(boxPosition);
-        }
-    }
+						xOff = xZero;
+						zOff = zZero;
+						yOff += boxDimension.y; //start new row (y)
+						xTemp = 0;
+
+						check2 = false;
+						check1 = false;
+						check3 = false;
+						check4 = false;
+					}
+					CalculatePosition();
+				}
+			}
+			else
+			{
+				if (xOff > xTemp)
+				{
+					xTemp = xOff;
+					//GameObject testing4 = new GameObject("max = " +xTemp);
+
+				}
+
+				if (!check3) {
+					float temp = boxDimension.x;
+					boxDimension.x = boxDimension.z;
+					boxDimension.z = temp;
+					check3 = true;
+				}
+				else if (!check1 && !check4)
+				{
+					xOff = xZero;
+					if (zOff + boxDimension.z > containerXYZ.z) {
+						check4 = true;
+					} 
+					else {
+						zOff += boxDimension.z;
+						if (zOff > zMax) {
+							zMax = zOff;
+						}
+					}
+				}
+				else
+				{
+					containerXYZ.x = xMax;
+					containerXYZ.z = zMax;
+					//GameObject testing12 = new GameObject(xMax + "," + zMax);
+					xMax = 0;
+					zMax = 0;
+
+					xOff = xZero;
+					zOff = zZero;
+					yOff += boxDimension.y; //start new row (y)
+					xTemp = 0;
+
+					check2 = false;
+					check1 = false;
+					check3 = false;
+					check4 = false;
+				}
+				CalculatePosition();
+			}
+
+
+			//GenerateBox(boxPosition);
+		}
+	}
 
     private void GenerateBox(Vector3 position)
     {
