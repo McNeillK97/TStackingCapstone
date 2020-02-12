@@ -18,7 +18,7 @@ public class Algorithm : MonoBehaviour
     private float xOff = 0, yOff = 0, zOff = 0;
     private float xZero = 0, zZero = 0;
     private float xTemp = 0, zTemp = 0;
-    private float xMax = 0; zMax = 0;
+    private float xMax = 0, zMax = 0;
 
     private bool check1 = false;
     private bool check2 = false;
