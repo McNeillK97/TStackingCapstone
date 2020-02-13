@@ -15,6 +15,12 @@ public class Algorithm : MonoBehaviour
     private Vector3 boxDimension;
     private List<Vector3> waitingQueue = new List<Vector3>();
 
+    //***************** For Undo fuctionality ************************
+    private List<Transform> allBoxQueue = new List<Transform>();
+    private List<List<float>> allBoxData = new List<List<float>>();
+    private List<bool> checkData = new List<bool>();
+    //*****************************************************************
+
     private float xOff = 0, yOff = 0, zOff = 0;
     private float xZero = 0, zZero = 0;
     private float xTemp = 0, zTemp = 0;
@@ -24,6 +30,7 @@ public class Algorithm : MonoBehaviour
     private bool check2 = false;
     private bool check3 = false;
     private bool check4 = false;
+
     private bool findContainerPlane = false;
     private bool isFirstBox = true;
 
@@ -191,14 +198,14 @@ public void CalculatePosition()
 				}
 				CalculatePosition();
 			}
-
-
 			//GenerateBox(boxPosition);
 		}
 	}
 
     private void GenerateBox(Vector3 position)
     {
+        StoreBoxData();
+
         GameObject boxCreated = box;
         boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
         //boxCreated.transform.localScale = waitingQueue[waitingQueueIndex];
@@ -207,17 +214,128 @@ public void CalculatePosition()
         if (isFirstBox)
         {
             currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
-            
+
+            allBoxQueue.Add(currentBox);
+
             isFirstBox = false;
         }
         else
         {
-            lastBox = currentBox;
-            currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
+            try
+            {
+                lastBox = currentBox;
+                currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
 
-            lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
-            lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
-            lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f) ;
+                allBoxQueue.Add(currentBox);
+
+                lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+                lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
+                lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+            }
+            catch
+            {
+            }
         }
+    }
+
+    public void Finish()
+    {
+        if (currentBox != null)
+        {
+            currentBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+            currentBox.GetChild(0).GetComponent<Animation>().enabled = false;
+            currentBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+
+            //Clear the data(Reset)
+            findContainerPlane = false;
+            isFirstBox = true;
+
+            xOff = 0; yOff = 0; zOff = 0;
+            xZero = 0; zZero = 0;
+            xTemp = 0; zTemp = 0;
+            xMax = 0; zMax = 0;
+
+            check2 = false;
+            check1 = false;
+            check3 = false;
+            check4 = false;
+
+            allBoxQueue.Clear();
+            allBoxData.Clear();
+        }
+    }
+
+    public void Undo()
+    {
+        if (allBoxQueue.Count > 0)
+        {
+            //Undo box gameobject
+            Transform temp = allBoxQueue[allBoxQueue.Count - 1];
+            allBoxQueue.RemoveAt(allBoxQueue.Count - 1); 
+            Destroy(temp.gameObject);
+
+            //Undo box data
+            if (allBoxQueue.Count == 0)
+            {
+                isFirstBox = true;
+
+                xOff = 0; yOff = 0; zOff = 0;
+                xTemp = 0; zTemp = 0;
+                xMax = 0; zMax = 0;
+
+                check2 = false;
+                check1 = false;
+                check3 = false;
+                check4 = false;
+            }
+            else
+            {
+                List<float> lastBoxData = allBoxData[allBoxData.Count - 1];
+
+                xOff = lastBoxData[0];
+                yOff = lastBoxData[1];
+                zOff = lastBoxData[2];
+
+                xZero = lastBoxData[3];
+                zZero = lastBoxData[4];
+
+                xTemp = lastBoxData[5];
+                zTemp = lastBoxData[6];
+
+                xMax = lastBoxData[7];
+                zMax = lastBoxData[8];
+
+                check1 = checkData[0];
+                check2 = checkData[1];
+                check3 = checkData[2];
+                check4 = checkData[3];
+            }
+            checkData.RemoveAt(checkData.Count - 1);
+            allBoxData.RemoveAt(allBoxData.Count - 1);
+        }
+    }
+
+    public void StoreBoxData()
+    {
+        List<float> boxData = new List<float>();
+        boxData.Add(xOff);
+        boxData.Add(yOff);
+        boxData.Add(zOff);
+
+        boxData.Add(xZero);
+        boxData.Add(zZero);
+
+        boxData.Add(xTemp);
+        boxData.Add(zTemp);
+
+        boxData.Add(xMax);
+        boxData.Add(zMax);
+
+        allBoxData.Add(boxData);
+
+        checkData.Add(check1);
+        checkData.Add(check2);
+        checkData.Add(check3);
+        checkData.Add(check4);
     }
 }

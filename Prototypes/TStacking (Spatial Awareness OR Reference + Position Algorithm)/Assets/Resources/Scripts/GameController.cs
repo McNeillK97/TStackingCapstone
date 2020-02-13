@@ -8,9 +8,9 @@ public class GameController : MonoBehaviour
     public GameObject containerMarks;
     public TextMesh InstructionTextMesh;
     public bool openSpatialAwareness;
+
     [HideInInspector]
     public AudioService audioService;
-
     private VoiceCommand voiceCommand;
     private Algorithm algorithm;
     private SpatialAwareness spatialAwareness;
@@ -40,6 +40,12 @@ public class GameController : MonoBehaviour
         }
 
         audioService.PlayBgMusic(Constants.audioBgName, true);
+    }
+
+    public void Restart()
+    {
+        InstructionTextMesh.text = "Please scan the container mark";
+        SetScanContainerMark(true);
     }
 
     public void GenerateContainerPlane(float length, float width, float height)
@@ -73,6 +79,16 @@ public class GameController : MonoBehaviour
     public void GenerateBox()
     {
         algorithm.CalculatePosition();
+    }
+
+    public void Undo()
+    {
+        algorithm.Undo();
+    }
+
+    public void FinishCalculation()
+    {
+        algorithm.Finish();
     }
 
     public void StartSpatialAwareness()
