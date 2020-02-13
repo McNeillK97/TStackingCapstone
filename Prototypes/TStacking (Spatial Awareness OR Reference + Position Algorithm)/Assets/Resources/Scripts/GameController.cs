@@ -11,9 +11,11 @@ public class GameController : MonoBehaviour
 
     [HideInInspector]
     public AudioService audioService;
-    private VoiceCommand voiceCommand;
+    [HideInInspector]
+    public VoiceCommand voiceCommand;
     private Algorithm algorithm;
-    private SpatialAwareness spatialAwareness;
+    [HideInInspector]
+    public SpatialAwareness spatialAwareness;
 
     private void Awake()
     {
@@ -31,11 +33,11 @@ public class GameController : MonoBehaviour
         {
             spatialAwareness.enabled = true;
             voiceCommand.SetScanCommand(true);
-            InstructionTextMesh.text = "Please Say \"Scan\" to Start the Spatial Awareness";
+            InstructionTextMesh.text = "Please say \"Scan\" to start scanning the room";
         }
         else
         {
-            InstructionTextMesh.text = "Please scan the container mark";
+            InstructionTextMesh.text = "Please scan the virtual plane QR code";
             SetScanContainerMark(true);
         }
 
@@ -44,7 +46,7 @@ public class GameController : MonoBehaviour
 
     public void Restart()
     {
-        InstructionTextMesh.text = "Please scan the container mark";
+        InstructionTextMesh.text = "Please scan the virtual plane QR code";
         SetScanContainerMark(true);
     }
 
@@ -59,10 +61,9 @@ public class GameController : MonoBehaviour
         algorithm.SetContainerInfo(new Vector3(length, height, width));
 
         // Show the instruction message
-        InstructionTextMesh.text = "Please drag the virtual plane to the position\n" +
-                                                     "right above the real container or a comfortable position\n" +
+        InstructionTextMesh.text = "Please drag the virtual plane to a comfortable position\n\n" +
                                                      "Say \"Next\" when you finish\n" +
-                                                     "Say \"Rescan\" if you want to rescan the plane mark";
+                                                     "Say \"Rescan\" to rescan the virtual plane QR code";
 
         // Enable Voice command to say "Rescan" and "Next"
         voiceCommand.SetRescanCommand(true);

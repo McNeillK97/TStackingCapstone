@@ -8,7 +8,8 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
     public Material wireFrame20;
     public Material wireFrame75;
     
-    private bool requestFinishScan;
+    [HideInInspector]
+    public bool requestFinishScan;
     private bool finishScan;
 
     private void Start()
@@ -65,8 +66,9 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
 
                 case SpatialUnderstanding.ScanStates.Scanning:
 
-                    GameController.instance.SetInstructionText("State: Scanning");
-                    this.LogSurfaceState();
+                    GameController.instance.SetInstructionText("State: Scanning\n" +
+                                                                                            "Please look around");
+                    Invoke("LogSurfaceState", 5f);
                     break;
 
                 case SpatialUnderstanding.ScanStates.Finishing:
@@ -77,7 +79,7 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
                 case SpatialUnderstanding.ScanStates.Done:
 
                     GameController.instance.SetInstructionText("State: Scan Finished\n" +
-                                                                                           "Please scan the container plane mark\n");
+                                                                                           "Please scan the virtual plane QR code");
                     GameObject.FindGameObjectWithTag("SpatialUnderstanding").GetComponent<SpatialUnderstandingCustomMesh>().MeshMaterial = wireFrame20;
                     GameController.instance.SetScanContainerMark(true);
                     this.finishScan = true;
@@ -96,7 +98,7 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
         {
             var stats = SpatialUnderstanding.Instance.UnderstandingDLL.GetStaticPlayspaceStats();
 
-            GameController.instance.SetInstructionText("Please Air-Tap when you are finished");
+            GameController.instance.SetInstructionText("Please Air-Tap when you finish scan");
         }
     }
 
@@ -104,13 +106,22 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
     {
         if(!requestFinishScan)
         {
-            GameController.instance.SetInstructionText("Requested Finish Scan");
+            GameController.instance.SetInstructionText("Are you sure you finish scan? Scan room cannot be restart.\n\n" +
+                                                                                    "Yes or No");
 
             GameController.instance.audioService.SetScanningAudio(false);
             GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
 
-            SpatialUnderstanding.Instance.RequestFinishScan();
+            GameController.instance.voiceCommand.SetYesNoCommand(true);
+            GameController.instance.voiceCommand.yesNoQues = QuestionType.scanFinish;
+
+            //SpatialUnderstanding.Instance.RequestFinishScan();
             requestFinishScan = true;
         }
+    }
+
+    public void RequestFinish()
+    {
+        SpatialUnderstanding.Instance.RequestFinishScan();
     }
 }
