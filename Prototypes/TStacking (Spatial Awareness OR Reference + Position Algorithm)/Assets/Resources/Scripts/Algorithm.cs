@@ -45,7 +45,7 @@ public class Algorithm : MonoBehaviour
 
 	//for testing program
 	private bool testingmode1 = false; //same-size
-	private bool testingmode2 = true; //random-size
+	private bool testingmode2 = false; //random-size
 
 	//For random-size box algorithm
 	Pallet pallet; //for random-size boxes
