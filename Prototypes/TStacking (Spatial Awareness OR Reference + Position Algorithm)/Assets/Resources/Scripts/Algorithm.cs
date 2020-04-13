@@ -10,13 +10,15 @@ public class Algorithm : MonoBehaviour
     public Material matLastBox;
 
     //Private Components
+    public GameController gameController;
+
     private Transform containerPlane;
     private Transform lastBox;
     private Transform currentBox;
 
     private Vector3 containerXYZ;
     private Vector3 boxDimension;
-    private List<Vector3> waitingQueue = new List<Vector3>();
+    public List<Vector3> waitingQueue = new List<Vector3>();
 	private int queueCount = 0; //only used for now
 
     //***************** For Undo fuctionality ************************
@@ -43,10 +45,6 @@ public class Algorithm : MonoBehaviour
     private bool findContainerPlane = false;
     private bool isFirstBox = true;
 
-	//for testing program
-	private bool testingmode1 = false; //same-size
-	private bool testingmode2 = false; //random-size
-
 	//For random-size box algorithm
 	Pallet pallet; //for random-size boxes
 
@@ -54,21 +52,30 @@ public class Algorithm : MonoBehaviour
 	//Every unity unit is a meter in the real world
 	//Every 3d array cell = 1/conversionNum in unity
 	//conversion is currently set at 100, so every 3d array cell is a 0.01 in unity or 1 cm in the real world
-	private float conversionNum = 100f; 
+	private float conversionNum = 100f;
+
+    private void Start()
+    {
+        gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+    }
 
     public void SetContainerInfo(Vector3 containerXYZ)
     {
         this.containerXYZ = containerXYZ;
-		pallet = new Pallet ((int)(containerXYZ.x*conversionNum), (int)(containerXYZ.y*conversionNum), (int)(containerXYZ.z*conversionNum));
-		if (testingmode2) {
-			pallet = new Pallet (300, 300, 300);
-		}
+		pallet = new Pallet ((int)(containerXYZ.z*conversionNum), (int)(containerXYZ.x*conversionNum), (int)(containerXYZ.y*conversionNum));
+
         //this.containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
     }
 
 	//add box to waiting queue
-	public void AddBox(Vector3 boxXYZ){
-		waitingQueue.Add(boxXYZ);
+	public void AddBox(Vector3 boxXYZ)
+    {
+        if(containerPlane == null)
+        {
+            containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
+        }
+
+        waitingQueue.Add(boxXYZ);
 	}
 
     public void SetBoxInfo(Vector3 boxXYZ)
@@ -80,30 +87,41 @@ public class Algorithm : MonoBehaviour
         }
 
 		//set box size
-		if (testingmode1) {
+		if (gameController.isMode1)
+        {
 			boxDimension = new Vector3 (0.3f, 0.3f, 0.3f);
-		} else {
+		}
+        else
+        {
 			boxDimension = boxXYZ;
 		}
 
 		//determine whether t-stacking is possible for same-size algorithm
-		if (boxDimension.x*2 == boxDimension.z || boxDimension.z*2 == boxDimension.x) {
+		if (boxDimension.x*2 == boxDimension.z || boxDimension.z*2 == boxDimension.x)
+        {
 			regularstacking = false;
-		} else {
+		}
+        else
+        {
 			regularstacking = true;
 		}
 
 		//generate 50 random boxes that can be used to test random-size algorithm
-		if (testingmode2) {
-			System.Random rnd = new System.Random (); //random numbers for testing
-			Vector3 newItem;
-			int numTests = 50;
-			for (int i = 0; i < numTests; i++) {
-				newItem.x = (float)rnd.NextDouble()+0.3f;
-				newItem.y = (float)rnd.NextDouble()+0.3f;
-				newItem.z = (float)rnd.NextDouble()+0.3f;
-				waitingQueue.Add (newItem);
-			}
+		if (gameController.isMode2)
+        {
+            if(gameController.isPregenerateRandomBoxes)
+            {
+                System.Random rnd = new System.Random(); //random numbers for testing
+                Vector3 newItem = new Vector3();
+                int numTests = 50;
+                for (int i = 0; i < numTests; i++)
+                {
+                    newItem.x = (float)rnd.NextDouble() * 0.5f + 0.1f;
+                    newItem.y = (float)rnd.NextDouble() * 0.5f + 0.1f;
+                    newItem.z = (float)rnd.NextDouble() * 0.5f + 0.1f;
+                    waitingQueue.Add(newItem);
+                }
+            }
 		}
     }
 
@@ -114,61 +132,72 @@ public class Algorithm : MonoBehaviour
 
 		//0.0000001f are added to the container size when checking because sometimes 0.01f <= 0.01f may not return true
 		//check y
-		if (yOff + boxDimension.y <= containerXYZ.y + 0.0000001f) {
-
+		if (yOff + boxDimension.y <= containerXYZ.y + 0.0000001f)
+        {
 			//check x
-			if (xOff + boxDimension.x <= containerXYZ.x + 0.0000001f) {
-				
+			if (xOff + boxDimension.x <= containerXYZ.x + 0.0000001f)
+            {
 				//check z
-				if (zOff + boxDimension.z <= containerXYZ.z + 0.0000001f) {
-
+				if (zOff + boxDimension.z <= containerXYZ.z + 0.0000001f)
+                {
 					check3 = true;
 					//generate box
 					boxPosition.x = xOff;
 					boxPosition.y = yOff;
 					boxPosition.z = zOff;
 					GenerateBox (boxPosition);
-					if (check1) { //this is for trying to see if boxes fit into side of pallet after flipping boxes
-						//increment z
+					if (check1)  //this is for trying to see if boxes fit into side of pallet after flipping boxes
+                    {
+					    //increment z
 						zOff += boxDimension.z;
 						//keeping track of how far boxes can be stacked for z coordinate
-						if (zOff > zMax) {
+						if (zOff > zMax)
+                        {
 							zMax = zOff;
 						}
 						//also keeping track of how far box can be stacked for x coordinate
-						if (xOff + boxDimension.x > xMax) {
+						if (xOff + boxDimension.x > xMax)
+                        {
 							xMax = xOff + boxDimension.x;
 						}
-					} else {
+					}
+                    else
+                    {
 						//increment x
 						xOff += boxDimension.x;
 						//keep track of how far boxes have been stacked for x coordinate
-						if (xOff > xMax) {
+						if (xOff > xMax)
+                        {
 							xMax = xOff;
 						}
 					}
-						
-
-				} else { //z does not fit
-					if (!check2) { //flip boxes x and z and try again
-						if (!regularstacking) {
+				}
+                else
+                { //z does not fit
+					if (!check2)
+                    { //flip boxes x and z and try again
+						if (!regularstacking)
+                        {
 							float temp = boxDimension.x;
 							boxDimension.x = boxDimension.z;
 							boxDimension.z = temp;
 						}
 						check2 = true;
-					} else if (!check1) {
+					}
+                    else if (!check1)
+                    {
 						//checking size of pallet(toward x)
 						check1 = true;
 						zOff = zZero;
 						xOff = xTemp;
-					} else {
+					}
+                    else
+                    {
 						//change container sizes to new max sizes
 						containerXYZ.x = xMax;
 						containerXYZ.z = zMax;
 						xMax = 0;
 						zMax = 0;
-
 
 						xOff = xZero;
 						zOff = zZero;
@@ -182,33 +211,44 @@ public class Algorithm : MonoBehaviour
 					}
 					CalculatePosition ();
 				}
-			} else { //x does not fit
-				
-				if (xOff > xTemp) { //keep track of how far boxes could be stacked for x value
+			}
+            else
+            { //x does not fit
+				if (xOff > xTemp)
+                { //keep track of how far boxes could be stacked for x value
 					xTemp = xOff;
 				}
-
-				if (!check3) { 
-					if (!regularstacking) {
+				if (!check3)
+                { 
+					if (!regularstacking)
+                    {
 						//flip box x and z
 						float temp = boxDimension.x;
 						boxDimension.x = boxDimension.z;
 						boxDimension.z = temp;
 					}
 					check3 = true;
-				} else if (!check1 && !check4) {
+				}
+                else if (!check1 && !check4)
+                {
 					xOff = xZero;
-					if (zOff + boxDimension.z > containerXYZ.z + 0.0000001f) { 
+					if (zOff + boxDimension.z > containerXYZ.z + 0.0000001f)
+                    { 
 						check4 = true; //boxes can no longer be stacked by increasing the z coordinate
-					} else {
+					}
+                    else
+                    {
 						//start new row of boxes (z)
 						zOff += boxDimension.z;
 						//keep track of how far boxes could be stacked for z dimension
-						if (zOff > zMax) {
+						if (zOff > zMax)
+                        {
 							zMax = zOff;
 						}
 					}
-				} else {
+				}
+                else
+                {
 					containerXYZ.x = xMax;
 					containerXYZ.z = zMax;
 					xMax = 0;
@@ -225,12 +265,21 @@ public class Algorithm : MonoBehaviour
 				}
 				CalculatePosition ();
 			}
-		} else { //y does not fit
+		}
+        else
+        { //y does not fit
 			Debug.Log("Not enough space");
 		}
 	}
 
-	public void CalculatePosition2(){
+	public void CalculatePosition2()
+    {
+        if(waitingQueue == null)
+        {
+            Debug.Log("Waitting Queue is Empty");
+            return;
+        }
+
 		//get next box from waiting queue
 		Vector3 bDimension = waitingQueue[queueCount];
 		//create box and convert size to be used in 3d array
@@ -241,16 +290,22 @@ public class Algorithm : MonoBehaviour
 		Debug.Log("Pos in cm " + position.getWidth() + " " + position.getHeight()+ " " + position.getLength());
 
 		//Check to make sure position was calculated and call generate box function
-		if (position.getWidth () > -1) {
+		if (position.getWidth () > -1)
+        {
 			//Convert coordinates from 3d array into unity coordinates
 			Vector3 bPosition = new Vector3 ((float)(position.getWidth ()) / conversionNum, (float)(position.getHeight ()) / conversionNum, (float)(position.getLength ()) / conversionNum);
 		
 			//increment queue and create box
 			queueCount++;
 			GenerateBox (bPosition, bDimension);
-		} else {
-			Debug.Log ("Unable to place box");
 		}
+        else
+        {
+			Debug.Log ("Unable to place box");
+            currentBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+            currentBox.GetChild(0).GetComponent<Animation>().enabled = false;
+            currentBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+        }
 	}
 
 	//generate box function for same-size box positions

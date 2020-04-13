@@ -14,8 +14,8 @@ using Vuforia;
 /// </summary>
 public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
 {
-    public float length, width, height;
-    private bool enableScanContainerMark = false;
+    //public float length, width, height;
+    //private bool enableScanContainerMark = false;
 
     private GameController gameController;
 
@@ -100,16 +100,18 @@ public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
 
         Debug.Log("TrackableEventHandler");
 
+        /*
         if(enableScanContainerMark)
         {
            if (GameObject.FindGameObjectWithTag("ContainerPlane"))
                 Destroy(GameObject.FindGameObjectWithTag("ContainerPlane"));
 
             gameController.GenerateContainerPlane(length, width, height);
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
             enableScanContainerMark = false;
         }
+        */
     }
 
     protected virtual void OnTrackingLost()
@@ -133,8 +135,10 @@ public class TrackableEventHandler : MonoBehaviour, ITrackableEventHandler
 
     #endregion // PROTECTED_METHODS
 
+    /*
     public void SetEnableScanContainerMark(bool status)
     {
         enableScanContainerMark = status;
     }
+    */
 }

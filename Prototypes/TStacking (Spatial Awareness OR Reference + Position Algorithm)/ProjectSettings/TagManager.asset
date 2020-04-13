@@ -8,6 +8,7 @@ TagManager:
   - ContainerMarks
   - SpatialUnderstanding
   - ContainerPlane
+  - QRCode
   layers:
   - Default
   - TransparentFX

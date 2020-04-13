@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Windows.Speech;
 
 public enum QuestionType
@@ -16,6 +15,7 @@ public class VoiceCommand : MonoBehaviour
     public float boxLength, boxWidth, boxHeight;
     public QuestionType yesNoQues;
 
+    private GameController gameController;
     private KeywordRecognizer keywordRecognizer;
     private Dictionary<string, Action> actions;
     private bool enableScan, enableRescan, enableNext, enableGenerate, enableBack,enableFinish, enableReset, enableYesNo;
@@ -24,6 +24,7 @@ public class VoiceCommand : MonoBehaviour
     private void Start()
     {
         //Initialize components
+        gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         actions = new Dictionary<string, Action>();
 
         enableScan = false;
@@ -68,10 +69,11 @@ public class VoiceCommand : MonoBehaviour
         if (enableScan)
         {
             //Start the spatial awareness
-            GameController.instance.StartSpatialAwareness();
+            gameController.spatialAwareness.ScanStateStart();
 
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
-            GameController.instance.audioService.SetScanningAudio(true);
+            //Play sound FX
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.audioService.SetScanningAudio(true);
 
             //Disable the voice command "Scan"
             enableScan = false;
@@ -86,13 +88,12 @@ public class VoiceCommand : MonoBehaviour
             //Destroy the current container plane, the new container plane will be generated after scan the container mark
             Destroy(GameObject.FindGameObjectWithTag("ContainerPlane"));
 
-            //Enable the container mark to scan again
-            GameController.instance.SetScanContainerMark(true);
+            //Enable the QR code to scan again
+            gameController.SetActiveQRCode(true, false);
+            gameController.SetInstructionText("Please rescan the container mark");
 
-            //Update the instruction text
-            GameController.instance.SetInstructionText("Please rescan the container mark");
-
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUIBack, false);
+            //Play sound FX
+            gameController.audioService.PlayUIAudio(Constants.audioUIBack, false);
 
             //Disable the voice command "Next" and "Rescan" 
             enableNext = false;
@@ -105,9 +106,10 @@ public class VoiceCommand : MonoBehaviour
         if(enableNext)
         {
             //Update the instruction text  
-            GameController.instance.SetInstructionText("Please say \"Set Box\" to set the box's information");
+            gameController.SetInstructionText("Please say \"Set Box\" to set the box's information");
 
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.SetActiveQRCode(false, true);
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
             enableScanBox = true;
 
@@ -121,14 +123,14 @@ public class VoiceCommand : MonoBehaviour
     {
         if(enableGenerate)
         {
-            GameController.instance.SetInstructionText("Insert a box\n\n" +
+            gameController.SetInstructionText("Insert a box\n\n" +
                                                                                    "Say \"Generate\" to insert more box\n" +
                                                                                    "Say \"Back\" to undo\n" +
                                                                                    "Say \"Finish\" when you want to finish");
 
-            GameController.instance.GenerateBox();
+            gameController.GenerateBox();
 
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUIScanBox, false);
+            gameController.audioService.PlayUIAudio(Constants.audioUIScanBox, false);
 
             enableBack = true;
             enableFinish = true;
@@ -139,8 +141,7 @@ public class VoiceCommand : MonoBehaviour
     {
         if(enableBack)
         {
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUIBack, false);
-            GameController.instance.Undo();
+            gameController.Undo();
         }
     }
 
@@ -149,10 +150,10 @@ public class VoiceCommand : MonoBehaviour
         if(enableFinish)
         {
             //Update the instruction text
-            GameController.instance.SetInstructionText("Scan finished\n\n" +
+            gameController.SetInstructionText("Scan finished\n\n" +
                                                                                    "Say \"Reset\" to replay");
-            GameController.instance.FinishCalculation();
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.FinishCalculation();
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
             //Disable the voice command  "Generate"
             enableGenerate = false;
@@ -166,10 +167,10 @@ public class VoiceCommand : MonoBehaviour
     {
         if(enableReset)
         {
-            GameController.instance.SetInstructionText("Are you sure you want to reset?\n\n" +
+            gameController.SetInstructionText("Are you sure you want to reset?\n\n" +
                                                                                    "Yes or No");
 
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
             yesNoQues = QuestionType.reset;
             enableReset = false;
@@ -189,7 +190,7 @@ public class VoiceCommand : MonoBehaviour
 
         Destroy(GameObject.FindGameObjectWithTag("ContainerPlane"));
 
-        GameController.instance.Restart();
+        gameController.Restart();
     }
 
     public void Yes()
@@ -199,13 +200,13 @@ public class VoiceCommand : MonoBehaviour
             switch (yesNoQues)
             {
                 case QuestionType.reset:
-                    GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+                    gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
                     Invoke("InvokeReset", 0.5f);
                     break;
 
                 case QuestionType.scanFinish:
-                    GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
-                    GameController.instance.spatialAwareness.RequestFinish();
+                    gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
+                    gameController.spatialAwareness.RequestFinish();
                     break;
             }
 
@@ -220,17 +221,17 @@ public class VoiceCommand : MonoBehaviour
             switch (yesNoQues)
             {
                 case QuestionType.reset:
-                    GameController.instance.audioService.PlayUIAudio(Constants.audioUIBack, false);
-                    GameController.instance.SetInstructionText("Scan finished\n\n" +
+                    gameController.audioService.PlayUIAudio(Constants.audioUIBack, false);
+                    gameController.SetInstructionText("Scan finished\n\n" +
                                                                                            "Say \"Reset\" to replay");
                     enableReset = true;
                     break;
 
                 case QuestionType.scanFinish:
-                    GameController.instance.audioService.PlayUIAudio(Constants.audioUIBack, false);
-                    GameController.instance.audioService.SetScanningAudio(true);
-                    GameController.instance.SetInstructionText("Please Air-Tap when you finish scan");
-                    GameController.instance.spatialAwareness.requestFinishScan = false;
+                    gameController.audioService.PlayUIAudio(Constants.audioUIBack, false);
+                    gameController.audioService.SetScanningAudio(true);
+                    gameController.SetInstructionText("Please Air-Tap when you finish scan");
+                    gameController.spatialAwareness.requestFinishScan = false;
                     break;
             }
 
@@ -244,13 +245,13 @@ public class VoiceCommand : MonoBehaviour
     {
         if(enableScanBox)
         {
-            GameController.instance.SetInstructionText("Insert same boxes\n" +
+            gameController.SetInstructionText("Insert same boxes\n" +
                                                                                    "Length: " + boxLength + "m, Width: " + boxWidth + "m, Height: " + boxHeight + "m\n" +
                                                                                    "Say \"Generate\" when you want to insert");
 
-            GameController.instance.SetBoxInfo(boxLength, boxWidth, boxHeight);
+            gameController.AddBoxInfo(boxLength, boxWidth, boxHeight, 0f);
 
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
         }
     }
     #endregion

@@ -5,16 +5,19 @@ using UnityEngine;
 
 public class SpatialAwareness : MonoBehaviour, IInputClickHandler
 {
+    //Materials to distinguish the scanning state finished scanning state
     public Material wireFrame20;
     public Material wireFrame75;
-    
+
+    private GameController gameController;
     [HideInInspector]
     public bool requestFinishScan;
     private bool finishScan;
 
     private void Start()
     {
-        //initialize components
+        //Initialize components
+        gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         requestFinishScan = false;
         finishScan = false;
     }
@@ -66,23 +69,27 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
 
                 case SpatialUnderstanding.ScanStates.Scanning:
 
-                    GameController.instance.SetInstructionText("State: Scanning\n" +
-                                                                                            "Please look around");
+                    gameController.SetInstructionText("State: Scanning\n" +
+                                                                             "Please look around");
                     Invoke("LogSurfaceState", 5f);
                     break;
 
                 case SpatialUnderstanding.ScanStates.Finishing:
 
-                    GameController.instance.SetInstructionText("State: Finishing Scan");
+                    gameController.SetInstructionText("State: Finishing Scan");
                     break;
 
                 case SpatialUnderstanding.ScanStates.Done:
 
-                    GameController.instance.SetInstructionText("State: Scan Finished\n" +
-                                                                                           "Please scan the virtual plane QR code");
+                    gameController.SetInstructionText("State: Scan Finished\n" +
+                                                                             "Please scan the virtual plane QR code");
+
                     GameObject.FindGameObjectWithTag("SpatialUnderstanding").GetComponent<SpatialUnderstandingCustomMesh>().MeshMaterial = wireFrame20;
-                    GameController.instance.SetScanContainerMark(true);
-                    this.finishScan = true;
+
+                    //Activate the mechanism to scan the QR code of the virtual plane/container
+                    gameController.SetActiveQRCode(true, false);
+
+                    finishScan = true;
                     break;
 
                 default:
@@ -94,28 +101,30 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
     private void LogSurfaceState()
     {
         IntPtr statsPtr = SpatialUnderstanding.Instance.UnderstandingDLL.GetStaticPlayspaceStatsPtr();
+
         if (SpatialUnderstandingDll.Imports.QueryPlayspaceStats(statsPtr) != 0)
         {
             var stats = SpatialUnderstanding.Instance.UnderstandingDLL.GetStaticPlayspaceStats();
 
-            GameController.instance.SetInstructionText("Please Air-Tap when you finish scan");
+            gameController.SetInstructionText("Please Air-Tap when you finish scan");
         }
     }
 
     public void OnInputClicked(InputClickedEventData eventData)
     {
+        //When the user air-tap and try to finish the scanning
         if(!requestFinishScan)
         {
-            GameController.instance.SetInstructionText("Are you sure you finish scan? Scan room cannot be restart.\n\n" +
-                                                                                    "Yes or No");
+            gameController.SetInstructionText("Are you sure you finish scan? Scan room cannot be restart.\n\n" +
+                                                                     "Yes or No");
 
-            GameController.instance.audioService.SetScanningAudio(false);
-            GameController.instance.audioService.PlayUIAudio(Constants.audioUINext, false);
+            //Shut down the audio FX of Scanning and play the audio FX of Next
+            gameController.audioService.SetScanningAudio(false);
+            gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
-            GameController.instance.voiceCommand.SetYesNoCommand(true);
-            GameController.instance.voiceCommand.yesNoQues = QuestionType.scanFinish;
+            gameController.voiceCommand.SetYesNoCommand(true);
+            gameController.voiceCommand.yesNoQues = QuestionType.scanFinish;
 
-            //SpatialUnderstanding.Instance.RequestFinishScan();
             requestFinishScan = true;
         }
     }
