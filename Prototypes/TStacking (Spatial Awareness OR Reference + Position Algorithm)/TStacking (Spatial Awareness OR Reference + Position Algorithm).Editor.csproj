@@ -293,6 +293,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>Assets/HoloToolkit/Utilities/Scripts/GLTF/Plugins/JsonNet/Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="System.Data ">
+      <HintPath>Assets/Plugins/System.Data .dll</HintPath>
+    </Reference>
     <Reference Include="UnityEditor.Advertisements">
       <HintPath>C:/Users/FVJack/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.8/Editor/UnityEditor.Advertisements.dll</HintPath>
     </Reference>
@@ -310,6 +313,12 @@
     </Reference>
     <Reference Include="UnityEngine.StandardEvents">
       <HintPath>C:/Users/FVJack/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>Assets/Plugins/System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data ">
+      <HintPath>Assets/Plugins/MySql.Data .dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
