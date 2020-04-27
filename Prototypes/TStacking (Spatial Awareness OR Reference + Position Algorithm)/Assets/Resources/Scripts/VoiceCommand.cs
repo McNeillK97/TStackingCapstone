@@ -18,10 +18,10 @@ public class VoiceCommand : MonoBehaviour
     private GameController gameController;
     private KeywordRecognizer keywordRecognizer;
     private Dictionary<string, Action> actions;
-    private bool enableScan, enableRescan, enableNext, enableGenerate, enableBack,enableFinish, enableReset, enableYesNo;
+    private bool enableScan,enableRescan, enableNext, enableGenerate, enableBack,enableFinish, enableReset, enableYesNo;
     private bool enableScanBox;     //This one is for testing
 
-    private void Start()
+    public void Initialization()
     {
         //Initialize components
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
@@ -35,10 +35,12 @@ public class VoiceCommand : MonoBehaviour
         enableFinish = false;
         enableReset = false;
         enableYesNo = false;
+        enableScanBox = false;
 
         //Add the keyword and related functions
         actions.Add("scan", Scan);
         actions.Add("next", Next);
+        actions.Add("qr code", _QRCode);
         actions.Add("rescan", Rescan);
         actions.Add("generate", Generate);
         actions.Add("back", Back);
@@ -46,11 +48,7 @@ public class VoiceCommand : MonoBehaviour
         actions.Add("reset", Restart);
         actions.Add("yes", Yes);
         actions.Add("no", No);
-
-        #region REGION_ONLY_FOR_TESTING 
-        enableScanBox = false;
-        actions.Add("set box", Set);
-        #endregion
+        actions.Add("set", Set);
 
         keywordRecognizer = new KeywordRecognizer(actions.Keys.ToArray());
         keywordRecognizer.OnPhraseRecognized += RecognizedSpeech;
@@ -81,6 +79,14 @@ public class VoiceCommand : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// This QR Code command just for simulative QR code
+    /// </summary>
+    public void _QRCode()
+    {
+        gameController.qRCode.ScanQRCode();
+    }
+
     public void Rescan()
     {
         if(enableRescan)
@@ -105,8 +111,15 @@ public class VoiceCommand : MonoBehaviour
     {
         if(enableNext)
         {
-            //Update the instruction text  
-            gameController.SetInstructionText("Please say \"Set Box\" to set the box's information");
+            //Update the instruction text 
+            if(gameController.isMode1)
+            {
+                gameController.SetInstructionText("Please say \"Set Box\" to set the box's information");
+            }
+            else if(gameController.isMode2)
+            {
+                gameController.SetInstructionText("Please scan the QR code of the box's information");
+            }
 
             gameController.SetActiveQRCode(false, true);
             gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
@@ -124,9 +137,9 @@ public class VoiceCommand : MonoBehaviour
         if(enableGenerate)
         {
             gameController.SetInstructionText("Insert a box\n\n" +
-                                                                                   "Say \"Generate\" to insert more box\n" +
-                                                                                   "Say \"Back\" to undo\n" +
-                                                                                   "Say \"Finish\" when you want to finish");
+                                                                     "Say \"Generate\" to insert more box\n" +
+                                                                     "Say \"Back\" to undo\n" +
+                                                                     "Say \"Finish\" when you want to finish");
 
             gameController.GenerateBox();
 
@@ -151,7 +164,7 @@ public class VoiceCommand : MonoBehaviour
         {
             //Update the instruction text
             gameController.SetInstructionText("Scan finished\n\n" +
-                                                                                   "Say \"Reset\" to replay");
+                                                                     "Say \"Reset\" to replay");
             gameController.FinishCalculation();
             gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
@@ -168,7 +181,7 @@ public class VoiceCommand : MonoBehaviour
         if(enableReset)
         {
             gameController.SetInstructionText("Are you sure you want to reset?\n\n" +
-                                                                                   "Yes or No");
+                                                                    "Yes or No");
 
             gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
 
@@ -240,18 +253,20 @@ public class VoiceCommand : MonoBehaviour
     }
     #endregion
 
-    #region REGION_ONLY_FOR_TESTING 
+    #region Mode 1
     public void Set()
     {
         if(enableScanBox)
         {
             gameController.SetInstructionText("Insert same boxes\n" +
-                                                                                   "Length: " + boxLength + "m, Width: " + boxWidth + "m, Height: " + boxHeight + "m\n" +
-                                                                                   "Say \"Generate\" when you want to insert");
+                                                                     "Length: " + boxLength + "m, Width: " + boxWidth + "m, Height: " + boxHeight + "m\n" +
+                                                                     "Say \"Generate\" when you want to insert");
 
-            gameController.AddBoxInfo(boxLength, boxWidth, boxHeight, 0f);
+            gameController.algorithm.SetBoxInfo(new Vector3(boxWidth, boxHeight, boxLength));
 
             gameController.audioService.PlayUIAudio(Constants.audioUINext, false);
+
+            enableGenerate = true; 
         }
     }
     #endregion

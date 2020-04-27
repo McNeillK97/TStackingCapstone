@@ -1,9 +1,10 @@
-using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 public class Algorithm : MonoBehaviour
 {
+    #region Common Components
     //Public Components
     public GameObject box;      //Prefabs of container with anchor
     public Material matCurrentBox;
@@ -21,14 +22,6 @@ public class Algorithm : MonoBehaviour
     public List<Vector3> waitingQueue = new List<Vector3>();
 	private int queueCount = 0; //only used for now
 
-    //***************** For Undo fuctionality ************************
-    private List<Transform> allBoxQueue = new List<Transform>();
-    private List<List<float>> allBoxData = new List<List<float>>();
-    private List<List<bool>> allCheckData = new List<List<bool>>();
-    private List<Vector3> allContainerXYZ = new List<Vector3>();
-    private List<Vector3> allBoxDimension = new List<Vector3>();
-    //*****************************************************************
-
 	//variables for same-size box algorithm
     private float xOff = 0, yOff = 0, zOff = 0; //coordinates for the next box
     private float xZero = 0, zZero = 0; //right now only holds value for 0, may change later on
@@ -45,341 +38,58 @@ public class Algorithm : MonoBehaviour
     private bool findContainerPlane = false;
     private bool isFirstBox = true;
 
-	//For random-size box algorithm
-	Pallet pallet; //for random-size boxes
+    private System.Random random = new System.Random();
 
-	//This is the unit for converting 3d array cells into unity units
-	//Every unity unit is a meter in the real world
-	//Every 3d array cell = 1/conversionNum in unity
-	//conversion is currently set at 100, so every 3d array cell is a 0.01 in unity or 1 cm in the real world
-	private float conversionNum = 100f;
+    /// <summary>
+    /// This is the unit for converting 3d array cells into unity units
+    /// Every unity unit is a meter in the real world
+    /// Every 3d array cell = 1/conversionNum in unity
+    /// conversion is currently set at 100, so every 3d array cell is a 0.01 in unity or 1 cm in the real world
+    /// </summary>
+    private float conversionNum = 100f;
+    #endregion
 
-    private void Start()
+
+    #region Common Funtions
+
+    public void Initialization()
     {
+        //Connect to GameController
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+
+        //Check if random generate box into waiting queue
+        if (gameController.isPregenerateRandomBoxes)
+        {
+            Vector3 newItem = new Vector3();
+            for (int i = 0; i < 50; i++)
+            {
+                newItem.x = (float)random.NextDouble() * 0.5f + 0.1f;
+                newItem.y = (float)random.NextDouble() * 0.5f + 0.1f;
+                newItem.z = (float)random.NextDouble() * 0.5f + 0.1f;
+                waitingQueue.Add(newItem);
+            }
+            Debug.Log(waitingQueue.Count);
+        }
     }
 
     public void SetContainerInfo(Vector3 containerXYZ)
     {
         this.containerXYZ = containerXYZ;
-		pallet = new Pallet ((int)(containerXYZ.z*conversionNum), (int)(containerXYZ.x*conversionNum), (int)(containerXYZ.y*conversionNum));
-
-        //this.containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
+        pallet = new Pallet((int)(containerXYZ.z * conversionNum), (int)(containerXYZ.x * conversionNum), (int)(containerXYZ.y * conversionNum));
     }
 
-	//add box to waiting queue
-	public void AddBox(Vector3 boxXYZ)
+    /// <summary>
+    ///  Add box to waiting queue
+    /// </summary>
+    public void AddBox(Vector3 boxXYZ)
     {
-        if(containerPlane == null)
+        if (containerPlane == null)
         {
             containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
         }
 
         waitingQueue.Add(boxXYZ);
-	}
-
-    public void SetBoxInfo(Vector3 boxXYZ)
-    {
-        if (!findContainerPlane)
-        {
-            containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
-            findContainerPlane = true;
-        }
-
-		//set box size
-		if (gameController.isMode1)
-        {
-			boxDimension = new Vector3 (0.3f, 0.3f, 0.3f);
-		}
-        else
-        {
-			boxDimension = boxXYZ;
-		}
-
-		//determine whether t-stacking is possible for same-size algorithm
-		if (boxDimension.x*2 == boxDimension.z || boxDimension.z*2 == boxDimension.x)
-        {
-			regularstacking = false;
-		}
-        else
-        {
-			regularstacking = true;
-		}
-
-		//generate 50 random boxes that can be used to test random-size algorithm
-		if (gameController.isMode2)
-        {
-            if(gameController.isPregenerateRandomBoxes)
-            {
-                System.Random rnd = new System.Random(); //random numbers for testing
-                Vector3 newItem = new Vector3();
-                int numTests = 50;
-                for (int i = 0; i < numTests; i++)
-                {
-                    newItem.x = (float)rnd.NextDouble() * 0.5f + 0.1f;
-                    newItem.y = (float)rnd.NextDouble() * 0.5f + 0.1f;
-                    newItem.z = (float)rnd.NextDouble() * 0.5f + 0.1f;
-                    waitingQueue.Add(newItem);
-                }
-            }
-		}
     }
-
-	//This is for the algorithm to calculate the position
-	public void CalculatePosition()
-	{
-		Vector3 boxPosition = Vector3.zero;
-
-		//0.0000001f are added to the container size when checking because sometimes 0.01f <= 0.01f may not return true
-		//check y
-		if (yOff + boxDimension.y <= containerXYZ.y + 0.0000001f)
-        {
-			//check x
-			if (xOff + boxDimension.x <= containerXYZ.x + 0.0000001f)
-            {
-				//check z
-				if (zOff + boxDimension.z <= containerXYZ.z + 0.0000001f)
-                {
-					check3 = true;
-					//generate box
-					boxPosition.x = xOff;
-					boxPosition.y = yOff;
-					boxPosition.z = zOff;
-					GenerateBox (boxPosition);
-					if (check1)  //this is for trying to see if boxes fit into side of pallet after flipping boxes
-                    {
-					    //increment z
-						zOff += boxDimension.z;
-						//keeping track of how far boxes can be stacked for z coordinate
-						if (zOff > zMax)
-                        {
-							zMax = zOff;
-						}
-						//also keeping track of how far box can be stacked for x coordinate
-						if (xOff + boxDimension.x > xMax)
-                        {
-							xMax = xOff + boxDimension.x;
-						}
-					}
-                    else
-                    {
-						//increment x
-						xOff += boxDimension.x;
-						//keep track of how far boxes have been stacked for x coordinate
-						if (xOff > xMax)
-                        {
-							xMax = xOff;
-						}
-					}
-				}
-                else
-                { //z does not fit
-					if (!check2)
-                    { //flip boxes x and z and try again
-						if (!regularstacking)
-                        {
-							float temp = boxDimension.x;
-							boxDimension.x = boxDimension.z;
-							boxDimension.z = temp;
-						}
-						check2 = true;
-					}
-                    else if (!check1)
-                    {
-						//checking size of pallet(toward x)
-						check1 = true;
-						zOff = zZero;
-						xOff = xTemp;
-					}
-                    else
-                    {
-						//change container sizes to new max sizes
-						containerXYZ.x = xMax;
-						containerXYZ.z = zMax;
-						xMax = 0;
-						zMax = 0;
-
-						xOff = xZero;
-						zOff = zZero;
-						yOff += boxDimension.y; //start new row (y)
-						xTemp = 0;
-						//reset all checks
-						check2 = false;
-						check1 = false;
-						check3 = false;
-						check4 = false;
-					}
-					CalculatePosition ();
-				}
-			}
-            else
-            { //x does not fit
-				if (xOff > xTemp)
-                { //keep track of how far boxes could be stacked for x value
-					xTemp = xOff;
-				}
-				if (!check3)
-                { 
-					if (!regularstacking)
-                    {
-						//flip box x and z
-						float temp = boxDimension.x;
-						boxDimension.x = boxDimension.z;
-						boxDimension.z = temp;
-					}
-					check3 = true;
-				}
-                else if (!check1 && !check4)
-                {
-					xOff = xZero;
-					if (zOff + boxDimension.z > containerXYZ.z + 0.0000001f)
-                    { 
-						check4 = true; //boxes can no longer be stacked by increasing the z coordinate
-					}
-                    else
-                    {
-						//start new row of boxes (z)
-						zOff += boxDimension.z;
-						//keep track of how far boxes could be stacked for z dimension
-						if (zOff > zMax)
-                        {
-							zMax = zOff;
-						}
-					}
-				}
-                else
-                {
-					containerXYZ.x = xMax;
-					containerXYZ.z = zMax;
-					xMax = 0;
-					zMax = 0;
-					xOff = xZero;
-					zOff = zZero;
-					yOff += boxDimension.y; //start new row (y)
-					xTemp = 0;
-					//reset all checks
-					check2 = false;
-					check1 = false;
-					check3 = false;
-					check4 = false;
-				}
-				CalculatePosition ();
-			}
-		}
-        else
-        { //y does not fit
-			Debug.Log("Not enough space");
-		}
-	}
-
-	public void CalculatePosition2()
-    {
-        if(waitingQueue == null)
-        {
-            Debug.Log("Waitting Queue is Empty");
-            return;
-        }
-
-		//get next box from waiting queue
-		Vector3 bDimension = waitingQueue[queueCount];
-		//create box and convert size to be used in 3d array
-		Box box1 = new Box ((int)(bDimension.z*conversionNum), (int)(bDimension.x*conversionNum), (int)(bDimension.y*conversionNum));
-		Debug.Log("Box in cm " + box1.getWidth() + " " + box1.getHeight()+ " " + box1.getLength());
-		//Call the placeBox function to calculate position in 3d array
-		Box position = pallet.placeBox (box1);
-		Debug.Log("Pos in cm " + position.getWidth() + " " + position.getHeight()+ " " + position.getLength());
-
-		//Check to make sure position was calculated and call generate box function
-		if (position.getWidth () > -1)
-        {
-			//Convert coordinates from 3d array into unity coordinates
-			Vector3 bPosition = new Vector3 ((float)(position.getWidth ()) / conversionNum, (float)(position.getHeight ()) / conversionNum, (float)(position.getLength ()) / conversionNum);
-		
-			//increment queue and create box
-			queueCount++;
-			GenerateBox (bPosition, bDimension);
-		}
-        else
-        {
-			Debug.Log ("Unable to place box");
-            currentBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
-            currentBox.GetChild(0).GetComponent<Animation>().enabled = false;
-            currentBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
-        }
-	}
-
-	//generate box function for same-size box positions
-    private void GenerateBox(Vector3 position)
-    {
-        StoreBoxData();
-
-        GameObject boxCreated = box;
-        boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
-        //boxCreated.transform.localScale = waitingQueue[waitingQueueIndex];
-        boxCreated.transform.localScale = boxDimension;
-
-        if (isFirstBox)
-        {
-            currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
-
-            allBoxQueue.Add(currentBox);
-
-            isFirstBox = false;
-        }
-        else
-        {
-            try
-            {
-                lastBox = currentBox;
-                currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
-
-                allBoxQueue.Add(currentBox);
-
-                lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
-                lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
-                lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
-            }
-            catch
-            {
-            }
-        }
-    }
-
-	//generate function for random-size box positions
-	private void GenerateBox(Vector3 position, Vector3 dimension)
-	{
-		StoreBoxData();
-
-		GameObject boxCreated = box;
-		boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
-		boxCreated.transform.localScale = dimension;
-
-		if (isFirstBox)
-		{
-			currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
-
-			allBoxQueue.Add(currentBox);
-
-			isFirstBox = false;
-		}
-		else
-		{
-			try
-			{
-				lastBox = currentBox;
-				currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
-
-				allBoxQueue.Add(currentBox);
-
-				lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
-				lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
-				lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
-			}
-			catch
-			{
-			}
-		}
-	}
 
     public void Finish()
     {
@@ -408,13 +118,20 @@ public class Algorithm : MonoBehaviour
         }
     }
 
+    #region Undo Functionality
+    private List<Transform> allBoxQueue = new List<Transform>();
+    private List<List<float>> allBoxData = new List<List<float>>();
+    private List<List<bool>> allCheckData = new List<List<bool>>();
+    private List<Vector3> allContainerXYZ = new List<Vector3>();
+    private List<Vector3> allBoxDimension = new List<Vector3>();
+
     public void Undo()
     {
         if (allBoxQueue.Count > 0)
         {
             //Undo box gameobject
             Transform temp = allBoxQueue[allBoxQueue.Count - 1];
-            allBoxQueue.RemoveAt(allBoxQueue.Count - 1); 
+            allBoxQueue.RemoveAt(allBoxQueue.Count - 1);
             Destroy(temp.gameObject);
             //Try activate the last box animation
             try
@@ -513,170 +230,454 @@ public class Algorithm : MonoBehaviour
         //Store all box dimesion data
         allBoxDimension.Add(boxDimension);
     }
+    #endregion
 
-	//classes for multidimension stacking
-	//class for boxes
-	public class Box
-	{
-		private int height;
-		private int length;
-		private int width;
+    #endregion
 
-		public Box(int l, int w, int h)
-		{
-			height = h;
-			length = l;
-			width = w;
-		}
 
-		public int getHeight()
-		{
-			return height;
-		}
+    #region Algorithmn 1
 
-		public int getLength()
-		{
-			return length;
-		}
+    public void SetBoxInfo(Vector3 boxXYZ)
+    {
+        if (!findContainerPlane)
+        {
+            containerPlane = GameObject.FindGameObjectWithTag("ContainerPlane").GetComponent<Transform>();
+            findContainerPlane = true;
+        }
 
-		public int getWidth()
-		{
-			return width;
-		}
-	}
+        //set box size
+        boxDimension = boxXYZ;
 
-	//class for pallet
-	public class Pallet
-	{
-		private int maxLength;
-		private int maxWidth;
-		private int maxHeight;
+        //determine whether t-stacking is possible for same-size algorithm
+        if (boxDimension.x * 2 == boxDimension.z || boxDimension.z * 2 == boxDimension.x)
+        {
+            regularstacking = false;
+        }
+        else
+        {
+            regularstacking = true;
+        }
+    }
 
-		/*
+    public void CalculatePosition()
+    {
+        Vector3 boxPosition = Vector3.zero;
+
+        //0.0000001f are added to the container size when checking because sometimes 0.01f <= 0.01f may not return true
+        //check y
+        if (yOff + boxDimension.y <= containerXYZ.y + 0.0000001f)
+        {
+            //check x
+            if (xOff + boxDimension.x <= containerXYZ.x + 0.0000001f)
+            {
+                //check z
+                if (zOff + boxDimension.z <= containerXYZ.z + 0.0000001f)
+                {
+                    check3 = true;
+                    //generate box
+                    boxPosition.x = xOff;
+                    boxPosition.y = yOff;
+                    boxPosition.z = zOff;
+                    GenerateBox(boxPosition);
+                    if (check1)  //this is for trying to see if boxes fit into side of pallet after flipping boxes
+                    {
+                        //increment z
+                        zOff += boxDimension.z;
+                        //keeping track of how far boxes can be stacked for z coordinate
+                        if (zOff > zMax)
+                        {
+                            zMax = zOff;
+                        }
+                        //also keeping track of how far box can be stacked for x coordinate
+                        if (xOff + boxDimension.x > xMax)
+                        {
+                            xMax = xOff + boxDimension.x;
+                        }
+                    }
+                    else
+                    {
+                        //increment x
+                        xOff += boxDimension.x;
+                        //keep track of how far boxes have been stacked for x coordinate
+                        if (xOff > xMax)
+                        {
+                            xMax = xOff;
+                        }
+                    }
+                }
+                else
+                { //z does not fit
+                    if (!check2)
+                    { //flip boxes x and z and try again
+                        if (!regularstacking)
+                        {
+                            float temp = boxDimension.x;
+                            boxDimension.x = boxDimension.z;
+                            boxDimension.z = temp;
+                        }
+                        check2 = true;
+                    }
+                    else if (!check1)
+                    {
+                        //checking size of pallet(toward x)
+                        check1 = true;
+                        zOff = zZero;
+                        xOff = xTemp;
+                    }
+                    else
+                    {
+                        //change container sizes to new max sizes
+                        containerXYZ.x = xMax;
+                        containerXYZ.z = zMax;
+                        xMax = 0;
+                        zMax = 0;
+
+                        xOff = xZero;
+                        zOff = zZero;
+                        yOff += boxDimension.y; //start new row (y)
+                        xTemp = 0;
+                        //reset all checks
+                        check2 = false;
+                        check1 = false;
+                        check3 = false;
+                        check4 = false;
+                    }
+                    CalculatePosition();
+                }
+            }
+            else
+            { //x does not fit
+                if (xOff > xTemp)
+                { //keep track of how far boxes could be stacked for x value
+                    xTemp = xOff;
+                }
+                if (!check3)
+                {
+                    if (!regularstacking)
+                    {
+                        //flip box x and z
+                        float temp = boxDimension.x;
+                        boxDimension.x = boxDimension.z;
+                        boxDimension.z = temp;
+                    }
+                    check3 = true;
+                }
+                else if (!check1 && !check4)
+                {
+                    xOff = xZero;
+                    if (zOff + boxDimension.z > containerXYZ.z + 0.0000001f)
+                    {
+                        check4 = true; //boxes can no longer be stacked by increasing the z coordinate
+                    }
+                    else
+                    {
+                        //start new row of boxes (z)
+                        zOff += boxDimension.z;
+                        //keep track of how far boxes could be stacked for z dimension
+                        if (zOff > zMax)
+                        {
+                            zMax = zOff;
+                        }
+                    }
+                }
+                else
+                {
+                    containerXYZ.x = xMax;
+                    containerXYZ.z = zMax;
+                    xMax = 0;
+                    zMax = 0;
+                    xOff = xZero;
+                    zOff = zZero;
+                    yOff += boxDimension.y; //start new row (y)
+                    xTemp = 0;
+                    //reset all checks
+                    check2 = false;
+                    check1 = false;
+                    check3 = false;
+                    check4 = false;
+                }
+                CalculatePosition();
+            }
+        }
+        else
+        { //y does not fit
+            Debug.Log("Not enough space");
+        }
+    }
+
+    /// <summary>
+    /// Generate box function for same-size box positions
+    /// </summary>
+    private void GenerateBox(Vector3 position)
+    {
+        StoreBoxData();
+
+        GameObject boxCreated = box;
+        boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
+        //boxCreated.transform.localScale = waitingQueue[waitingQueueIndex];
+        boxCreated.transform.localScale = boxDimension;
+
+        if (isFirstBox)
+        {
+            currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
+
+            allBoxQueue.Add(currentBox);
+
+            isFirstBox = false;
+        }
+        else
+        {
+            try
+            {
+                lastBox = currentBox;
+                currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
+
+                allBoxQueue.Add(currentBox);
+
+                lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+                lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
+                lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+            }
+            catch{ }
+        }
+    }
+
+    #endregion
+
+
+    #region Algorithmn 2
+    Pallet pallet;  //For random-size box algorithm
+
+    public void CalculatePosition2()
+    {
+        if (waitingQueue == null)
+        {
+            Debug.Log("Waitting Queue is Empty");
+            return;
+        }
+
+        //get next box from waiting queue
+        Vector3 bDimension = waitingQueue[queueCount];
+        //create box and convert size to be used in 3d array
+        Box box1 = new Box((int)(bDimension.z * conversionNum), (int)(bDimension.x * conversionNum), (int)(bDimension.y * conversionNum));
+        Debug.Log("Box in cm " + box1.getWidth() + " " + box1.getHeight() + " " + box1.getLength());
+        //Call the placeBox function to calculate position in 3d array
+        Box position = pallet.placeBox(box1);
+        Debug.Log("Pos in cm " + position.getWidth() + " " + position.getHeight() + " " + position.getLength());
+
+        //Check to make sure position was calculated and call generate box function
+        if (position.getWidth() > -1)
+        {
+            //Convert coordinates from 3d array into unity coordinates
+            Vector3 bPosition = new Vector3((float)(position.getWidth()) / conversionNum, (float)(position.getHeight()) / conversionNum, (float)(position.getLength()) / conversionNum);
+
+            //increment queue and create box
+            queueCount++;
+            GenerateBox(bPosition, bDimension);
+        }
+        else
+        {
+            Debug.Log("Unable to place box");
+            currentBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+            currentBox.GetChild(0).GetComponent<Animation>().enabled = false;
+            currentBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+        }
+    }
+
+    /// <summary>
+    /// Generate function for random-size box positions
+    /// </summary>
+    private void GenerateBox(Vector3 position, Vector3 dimension)
+    {
+        StoreBoxData();
+
+        GameObject boxCreated = box;
+        boxCreated.transform.localPosition = new Vector3(position.x, position.y, -position.z);
+        boxCreated.transform.localScale = dimension;
+
+        if (isFirstBox)
+        {
+            currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
+
+            allBoxQueue.Add(currentBox);
+
+            isFirstBox = false;
+        }
+        else
+        {
+            try
+            {
+                lastBox = currentBox;
+                currentBox = GameObject.Instantiate(boxCreated, containerPlane).transform;
+
+                allBoxQueue.Add(currentBox);
+
+                lastBox.GetChild(0).GetComponent<MeshRenderer>().material = matLastBox;
+                lastBox.GetChild(0).GetComponent<Animation>().enabled = false;
+                lastBox.GetChild(0).transform.localPosition = new Vector3(0.5f, 0.5f, -0.5f);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    public class Pallet
+    {
+        private int maxLength;
+        private int maxWidth;
+        private int maxHeight;
+
+        /*
         *   For the storage array:
         *       0 means empty space
         *       1 means filled space
         *       2 means edge space
         */
 
-		private int[,,] storage;
+        private int[,,] storage;
 
-		public Pallet(int l, int w, int h)
-		{
-			maxHeight = h;
-			maxLength = l;
-			maxWidth = w;
-			storage = new int[maxLength, maxWidth, maxHeight];
-			initStorage();
-		}
+        public Pallet(int l, int w, int h)
+        {
+            maxHeight = h;
+            maxLength = l;
+            maxWidth = w;
+            storage = new int[maxLength, maxWidth, maxHeight];
+            initStorage();
+        }
 
-		private void initStorage()
-		{
-			for(int i=0; i<maxHeight; i++)
-			{
-				for(int j=0; j<maxLength; j++)
-				{
-					for(int k=0; k<maxWidth; k++)
-					{
-						storage[j, k, i] = 0;
-					}
-				}
-			}
-		}
+        private void initStorage()
+        {
+            for (int i = 0; i < maxHeight; i++)
+            {
+                for (int j = 0; j < maxLength; j++)
+                {
+                    for (int k = 0; k < maxWidth; k++)
+                    {
+                        storage[j, k, i] = 0;
+                    }
+                }
+            }
+        }
 
-		public Box placeBox(Box newBox)
-		{
-			Box position = new Box (-1, -1, -1);
-			for(int k=0; k<maxHeight; k++)
-			{
-				for(int i=0; i < maxLength; i++)
-				{
-					for(int j=0; j<maxWidth; j++)
-					{
-						if(storage[i,j,k] == 0)
-						{
-							if(searchSpace(newBox, i, j, k))
-							{
-								//fill area
-								fillSpace(i, j, k, i + newBox.getLength(), j + newBox.getWidth(), k + newBox.getHeight());
+        public Box placeBox(Box newBox)
+        {
+            Box position = new Box(-1, -1, -1);
+            for (int k = 0; k < maxHeight; k++)
+            {
+                for (int i = 0; i < maxLength; i++)
+                {
+                    for (int j = 0; j < maxWidth; j++)
+                    {
+                        if (storage[i, j, k] == 0)
+                        {
+                            if (searchSpace(newBox, i, j, k))
+                            {
+                                //fill area
+                                fillSpace(i, j, k, i + newBox.getLength(), j + newBox.getWidth(), k + newBox.getHeight());
 
-								Debug.Log ("TEST" + i + " " + j + " " + k);
-								Debug.Log ("TEST2" + newBox.getHeight() + " " + newBox.getLength() + " " + newBox.getWidth());
-								position = new Box (i, j, k);
+                                Debug.Log("TEST" + i + " " + j + " " + k);
+                                Debug.Log("TEST2" + newBox.getHeight() + " " + newBox.getLength() + " " + newBox.getWidth());
+                                position = new Box(i, j, k);
 
-								return position;
-							}
-							else
-							{
-								//for now skip the space, in the future try differnet orientations
-								j += newBox.getWidth();
-							}
-						}
-					}
-				}
-			}
+                                return position;
+                            }
+                            else
+                            {
+                                //for now skip the space, in the future try differnet orientations
+                                j += newBox.getWidth();
+                            }
+                        }
+                    }
+                }
+            }
+            return position;
+        }
 
+        private bool searchSpace(Box newBox, int l, int w, int h)
+        {
+            int lengthSearch = l + newBox.getLength();
+            int widthSearch = w + newBox.getWidth();
+            int heightSearch = h + newBox.getHeight();
 
+            if (widthSearch > maxWidth || lengthSearch > maxLength || heightSearch > maxHeight)
+            {
+                return false;
+            }
 
-			return position;
-		}
+            for (int k = h; k < heightSearch; k++)
+            {
+                for (int i = l; i < lengthSearch; i++)
+                {
+                    for (int j = w; j < widthSearch; j++)
+                    {
+                        if (storage[i, j, k] != 0)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
 
-		private bool searchSpace(Box newBox, int l, int w, int h)
-		{
-			int lengthSearch = l + newBox.getLength();
-			int widthSearch = w + newBox.getWidth();
-			int heightSearch = h + newBox.getHeight();
+        private void fillSpace(int startX, int startY, int startZ, int endX, int endY, int endZ)
+        {
+            for (int k = startZ; k < endZ; k++)
+            {
+                for (int i = startX; i < endX; i++)
+                {
+                    for (int j = startY; j < endY; j++)
+                    {
+                        storage[i, j, k] = 1;
+                    }
+                }
+            }
 
-			if(widthSearch > maxWidth || lengthSearch > maxLength || heightSearch > maxHeight)
-			{
-				return false;
-			}
+        }
 
-			for(int k=h; k<heightSearch; k++)
-			{
-				for (int i=l; i<lengthSearch; i++)
-				{
-					for(int j=w; j<widthSearch; j++)
-					{
-						if(storage[i,j,k] != 0)
-						{
-							return false;
-						}
-					}
-				}
-			}
+        //temp print function
+        public void print()
+        {
+            String outPut = "";
+            for (int i = 0; i < maxLength; i++)
+            {
+                outPut = "";
+                for (int j = 0; j < maxWidth; j++)
+                {
+                    outPut += storage[i, j, 0] + " ";
+                }
+            }
+        }
+    }
 
-			return true;
-		}
+    public class Box
+    {
+        private int height;
+        private int length;
+        private int width;
 
-		private void fillSpace(int startX, int startY, int startZ, int endX, int endY, int endZ)
-		{
-			for(int k=startZ; k<endZ; k++)
-			{
-				for(int i=startX; i<endX; i++)
-				{
-					for(int j=startY; j<endY; j++)
-					{
-						storage[i, j, k] = 1;
-					}
-				}
-			}
+        public Box(int l, int w, int h)
+        {
+            height = h;
+            length = l;
+            width = w;
+        }
 
-		}
+        public int getHeight()
+        {
+            return height;
+        }
 
-		//temp print function
-		public void print()
-		{
-			String outPut = "";
-			for(int i=0; i<maxLength; i++)
-			{
-				outPut = "";
-				for(int j=0; j<maxWidth; j++)
-				{
-					outPut += storage[i, j, 0] + " ";
-				}
-			}
-		}
-	}
+        public int getLength()
+        {
+            return length;
+        }
 
+        public int getWidth()
+        {
+            return width;
+        }
+    }
+    #endregion
 }

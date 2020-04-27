@@ -2,39 +2,40 @@
 
 public class GameController : MonoBehaviour
 {
-    //public static GameController instance;
-
     public GameObject containerPlane;
     public GameObject containerMarks;
     public TextMesh InstructionTextMesh;
+    [Header("Open it when Debug in HoloLens")]
     public bool openSpatialAwareness;
 
-    [Header("Mode 1")]
+    [Header("Algorithmn Controls")]
     public bool isMode1 = false;
-
-    [Header("Mode 2")]
     public bool isMode2 = false;
     public bool isPregenerateRandomBoxes = false;
 
-    [HideInInspector]
+    [Header("Essential Components")]
     public AudioService audioService;
-    [HideInInspector]
     public VoiceCommand voiceCommand;
-    private Algorithm algorithm;
-    [HideInInspector]
+    public Algorithm algorithm;
     public SpatialAwareness spatialAwareness;
+    public QRCode qRCode;
 
-    private QRCode qRCode;
     private bool enableScanPlane = false;
     private bool enableScanBox = false;
 
     private void Start()
     {
+        //Initialize Essential Components
         audioService = GetComponent<AudioService>();
         spatialAwareness = GetComponent<SpatialAwareness>();
         voiceCommand = GetComponent<VoiceCommand>();
         algorithm = GetComponent<Algorithm>();
         qRCode = GameObject.FindGameObjectWithTag("QRCode").GetComponent<QRCode>();
+
+        voiceCommand.Initialization();
+        algorithm.Initialization();
+        qRCode.Initialization();
+        spatialAwareness.Initialization();
 
         //If open the spatial awareness or not
         if (openSpatialAwareness)
@@ -51,12 +52,6 @@ public class GameController : MonoBehaviour
 
         //Play the background music
         audioService.PlayBgMusic(Constants.audioBgName, true);
-    }
-
-    public void Restart()
-    {
-        InstructionTextMesh.text = "Please scan the virtual plane QR code";
-        SetActiveQRCode(true, false);
     }
 
     public void GenerateContainerPlane(float length, float width, float height)
@@ -138,5 +133,11 @@ public class GameController : MonoBehaviour
     public void SetInstructionText(string info)
     {
         InstructionTextMesh.text = info;
+    }
+
+    public void Restart()
+    {
+        InstructionTextMesh.text = "Please scan the virtual plane QR code";
+        SetActiveQRCode(true, false);
     }
 }

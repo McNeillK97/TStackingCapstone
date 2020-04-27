@@ -14,7 +14,7 @@ public class SpatialAwareness : MonoBehaviour, IInputClickHandler
     public bool requestFinishScan;
     private bool finishScan;
 
-    private void Start()
+    public void Initialization()
     {
         //Initialize components
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();

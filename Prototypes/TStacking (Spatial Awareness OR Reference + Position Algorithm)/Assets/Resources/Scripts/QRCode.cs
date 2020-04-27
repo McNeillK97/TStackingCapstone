@@ -14,7 +14,7 @@ public class QRCode : MonoBehaviour
 
     private GameController gameController;
 
-    private void Start()
+    public void Initialization()
     {
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
     }
@@ -23,6 +23,17 @@ public class QRCode : MonoBehaviour
     {
         if(enableScanPlane || enableScanBox)
         {
+            //Default value for plane or box
+            if(enableScanPlane)
+            {
+                length = 1.5f; width = 1f; height = 1f; weight = 0f;
+            }
+            else if(enableScanBox)
+            {
+                length = 0.2f; width = 0.4f; height = 0.3f; weight = 1f;
+            }
+            //*********************************
+
             ConvertUnit();
             gameController.SetQRInformation(length, width, height, weight);
         }
@@ -30,12 +41,17 @@ public class QRCode : MonoBehaviour
 
     private void ConvertUnit()
     {
-        length = (float)Convert.ToDouble(IFLength.text);
-        width = (float)Convert.ToDouble(IFWidth.text);
-        height = (float)Convert.ToDouble(IFHeight.text);
-        weight = (float)Convert.ToDouble(IFWeight.text);
+        try
+        {
+            length = (float)Convert.ToDouble(IFLength.text);
+            width = (float)Convert.ToDouble(IFWidth.text);
+            height = (float)Convert.ToDouble(IFHeight.text);
+            weight = (float)Convert.ToDouble(IFWeight.text);
+        }
+        catch{ }
     }
 
+    #region Real QR Code
     public void readFromServer()
     {
         MySql.Data.MySqlClient.MySqlConnection connection;
@@ -136,3 +152,5 @@ class Box
         return weight;
     }
 }
+
+#endregion

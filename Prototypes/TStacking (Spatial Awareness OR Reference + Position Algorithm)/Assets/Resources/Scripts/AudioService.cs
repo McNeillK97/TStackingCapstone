@@ -7,11 +7,6 @@ public class AudioService : MonoBehaviour
 	public AudioSource audioBg;
 	public AudioSource audioUI;
 	public AudioSource audioScanning;
-	
-	public void InitService()
-    {
-		Debug.Log("Init audio service");
-    }
 
 	public void PlayBgMusic(string audioName, bool isLoop)
 	{
